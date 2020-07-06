@@ -2,14 +2,41 @@
 var gl = null;
 var program = null;
 var canvas = null;
-var mesh = null;
+var meshes = {};
+var worldMatrices = [];
+var bodyLocalMatrix = null;
+var gLightDir = [];
+var locationMatrices = [];
+var vaos = [];
 
-//Scene creation
+var objectKeys = [
+    "body", "ball", 
+    "leftFlipper", "rightFlipper" , 
+    "bumper1" , "bumper2" , "bumper3" , "puller" , 
+    "dr1" , "dr2" , "dr3" , "dr4" , "dr5" , "dr6",
+    "dl1" , "dl2" , "dl3" , "dl4" , "dl5" , "dl6"
+]
+
+//Lights and colors constants
+var materialColor = [0.0, 0.0, 0.0];
+var ambientLight = [0.9, 0.9, 0.9];
+var ambientMaterial = [0.9, 0.9, 0.9];
+var emission = [1.0, 1.0, 1.0];    
+var dirLightAlpha = utils.degToRad(60);
+var dirLightBeta = utils.degToRad(50);
+var directionalLight = [
+    Math.cos(dirLightAlpha) * Math.cos(dirLightBeta),
+    Math.sin(dirLightAlpha),
+    Math.cos(dirLightAlpha) * Math.sin(dirLightBeta)
+];
+var directionalLightColor = [0.0, 0.0, 1.0];
+
+//Camera constants
 var camX = 0;
-var camY = 0;
-var camZ = 0;
-var camAlpha = 0;
-var camBeta = 0;
+var camY = 20;
+var camZ = -10;
+var camAlpha = -54;
+var camBeta = 180;
 
 // Vertex shader
 var vs = `#version 300 es
@@ -30,7 +57,7 @@ out vec2 fs_uv;
 void main() {
 	fs_pos = in_pos;
 	fs_norm = in_norm;
-	fs_uv = vec2(in_uv.x, 1.0-in_uv.y);
+	fs_uv = in_uv;
 	
 	gl_Position = pMatrix * vec4(in_pos, 1);
 }`;
@@ -44,18 +71,41 @@ in vec3 fs_norm;
 in vec2 fs_uv;
 
 uniform sampler2D u_texture;
-uniform vec4 lightDir;
-//uniform float ambFact;
+uniform vec3 lightDir;
+uniform vec3 lightColor;
+uniform vec3 mDiffColor;
+uniform vec3 ambientLightColor;
+uniform vec3 ambientMaterial;
+
+uniform vec3 emit;
 
 out vec4 color;
 
 void main() {
-	vec4 texcol = texture(u_texture, fs_uv);
-	float ambFact = lightDir.w;
-	float dimFact = (1.0-ambFact) * clamp(dot(normalize(fs_norm), lightDir.xyz),0.0,1.0) + ambFact;
-	color = vec4(texcol.rgb * dimFact, texcol.a);
+    vec4 texcol = texture(u_texture, fs_uv);
+    vec3 nNormal = normalize(fs_norm);
+
+    vec3 lDir = normalize(lightDir);
+
+    //Lambert color
+    vec3 diff = clamp(dot(-lDir,nNormal), 0.0, 1.0) * lightColor;
+    vec3 lambertColor = mDiffColor * diff;
+
+    vec3 ambient = ambientLightColor * ambientMaterial;
+
+    //computing BRDF color
+    vec3 tempColor = clamp(lambertColor + ambient + emit, 0.0, 1.0);
+
+    //compose final color with texture
+    color = vec4(texcol.rgb * tempColor, texcol.a);
 }`;
 
+var positionAttributeLocation = null;
+var normalAttributeLocation = null;
+var uvAttributeLocation = null;
+var textLocation = null;
+
+gLightDir = [-1.0, 0.0, 0.0, 0.0];
 
 async function main(){
     var canvas = document.getElementById("my-canvas");
@@ -72,23 +122,6 @@ async function main(){
 
     gl.useProgram(program);
 
-    // links mesh attributes to shader attributes
-    program.vertexPositionAttribute = gl.getAttribLocation(program, "in_pos");
-    gl.enableVertexAttribArray(program.vertexPositionAttribute);
-        
-    program.vertexNormalAttribute = gl.getAttribLocation(program, "in_norm");
-    gl.enableVertexAttribArray(program.vertexNormalAttribute);
-        
-    program.textureCoordAttribute = gl.getAttribLocation(program, "in_uv");
-    gl.enableVertexAttribArray(program.textureCoordAttribute);
-
-    program.WVPmatrixUniform = gl.getUniformLocation(program, "pMatrix");
-    program.textureUniform = gl.getUniformLocation(program, "u_texture");
-    program.lightDir = gl.getUniformLocation(program, "lightDir");
-    //		program.ambFact = gl.getUniformLocation(program, "ambFact");
-		
-	OBJ.initMeshBuffers(gl, mesh);
-
     // prepares the world, view and projection matrices.
     var w=canvas.clientWidth;
     var h=canvas.clientHeight;
@@ -101,24 +134,81 @@ async function main(){
     // turn on depth testing
     gl.enable(gl.DEPTH_TEST);
 
-    // Load mesh using the webgl-obj-loader library
-    var objStr = await utils.get_objstr("PinballDark/Body.obj"); 
-    mesh = new OBJ.Mesh(objStr);
+    //Load all initial world matrices
+    worldMatrices = getInitialWorldmatrices();
+
+    // Load all meshes
+    var meshUrls = getMeshes();
+    for(const key of objectKeys) {
+        meshes[key] = await utils.loadMesh(meshUrls[key]);
+        OBJ.initMeshBuffers(gl, meshes[key]);
+        console.log(meshes[key]);
+    }
 
     texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     var image = new Image();
     image.src = "StarWarsPinball.png";
     image.onload = function () {
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.generateMipmap(gl.TEXTURE_2D);
+        //gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.generateMipmap(gl.TEXTURE_2D);
     };
 
-    addMeshToScene()
+    // links mesh attributes to shader attributes
+    program.vertexPositionAttribute = gl.getAttribLocation(program, "in_pos");
+    //gl.enableVertexAttribArray(program.vertexPositionAttribute);
+        
+    program.vertexNormalAttribute = gl.getAttribLocation(program, "in_norm");
+    //gl.enableVertexAttribArray(program.vertexNormalAttribute);
+        
+    program.textureCoordAttribute = gl.getAttribLocation(program, "in_uv");
+    //gl.enableVertexAttribArray(program.textureCoordAttribute);
+
+    program.WVPmatrixUniform = gl.getUniformLocation(program, "pMatrix");
+    program.textureUniform = gl.getUniformLocation(program, "u_texture");
+    program.lightDir = gl.getUniformLocation(program, "lightDir");
+
+    program.ambientLightColor = gl.getUniformLocation(program, "ambientLightColor");
+    program.ambientMaterial = gl.getUniformLocation(program, "ambientMaterial");
+    program.materialDiffColor = gl.getUniformLocation(program, 'mDiffColor');
+    program.emissionColor = gl.getUniformLocation(program, "emit");    
+    program.lightColor = gl.getUniformLocation(program, 'lightColor');
+
+    
+    //Add all meshes 
+    for(const key of objectKeys) {
+        let mesh = meshes[key];
+        let vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
+        vaos[key] = vao;
+    
+        var positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.vertices), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(program.vertexPositionAttribute);
+        gl.vertexAttribPointer(program.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+    
+        var uvBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.textures), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(program.textureCoordAttribute);
+        gl.vertexAttribPointer(program.textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
+    
+        var normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.vertexNormals), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(program.vertexNormalAttribute);
+        gl.vertexAttribPointer(program.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+    
+        var indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(mesh.indices), gl.STATIC_DRAW);  
+    }
 
     drawScene();
 
@@ -128,42 +218,35 @@ async function main(){
 function drawScene(){
     // clear scene
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); 
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
     // compose view and light
     var viewMatrix = utils.MakeView(camX, camY, camZ, camAlpha, camBeta);
-    
-    gl.drawElements(gl.TRIANGLES, mesh, gl.UNSIGNED_SHORT, 0);
+
+    for(const key of objectKeys) {
+        let mesh = meshes[key];
+        var worldViewMatrix = utils.multiplyMatrices(viewMatrix, worldMatrices[key]);
+        var projectionMatrix = utils.multiplyMatrices(perspectiveMatrix, worldViewMatrix);
+
+        var lightDirMatrix = utils.sub3x3from4x4(utils.transposeMatrix(worldMatrices));
+        var lightDirectionTransformed = utils.normalize(utils.multiplyMatrix3Vector3(lightDirMatrix, directionalLight));
+
+        gl.uniform3fv(program.materialDiffColor, materialColor);
+        gl.uniform3fv(program.lightColor, directionalLightColor);
+        gl.uniform3fv(program.ambientLightColor, ambientLight);
+        gl.uniform3fv(program.ambientMaterial, ambientMaterial);
+        gl.uniform3fv(program.lightDir, lightDirectionTransformed);
+
+        gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(projectionMatrix));	
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.uniform1i(program.textureUniform, 0);
+
+        
+        gl.bindVertexArray(vaos[key]);
+        gl.drawElements(gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0); 
+    }
     
     window.requestAnimationFrame(drawScene);
 }
-
-
-
-function addMeshToScene(){
-    //let mesh = allMeshes;
-    let vao = gl.createVertexArray();
-    //vaos[i] = vao;
-    gl.bindVertexArray(vao);
-
-    var positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.vertices), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(positionAttributeLocation);
-    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
-
-    var uvBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.textures), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(uvAttributeLocation);
-    gl.vertexAttribPointer(uvAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-
-    var normalBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.vertexNormals), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(normalAttributeLocation);
-    gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
-
-    var indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(mesh.indices), gl.STATIC_DRAW);
-  }
