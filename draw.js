@@ -5,7 +5,7 @@ var canvas = null;
 var meshes = {};
 var worldMatrices = [];
 var bodyLocalMatrix = null;
-var gLightDir = [];
+var gLightDir = [-1.0, 0.0, 0.0, 0.0];
 var locationMatrices = [];
 var vaos = [];
 
@@ -31,12 +31,82 @@ var directionalLight = [
 ];
 var directionalLightColor = [0.0, 0.0, 1.0];
 
+var ballx = -0.30053;
+var bally = 8.5335;
+var ballz = -5.9728;
+var ballx_spd = 0.02;
+var bally_spd = 0.0;
+var ballz_spd = 0.0;
+
 //Camera constants
+
 var camX = 0;
-var camY = 20;
-var camZ = -10;
-var camAlpha = -54;
+var camY = 21.1;
+var camZ = -8.4;
+var camAlpha = -61.1;
 var camBeta = 180;
+/*
+var camX = -0.4499999999999998;
+var camY = 9.599999999999838;
+var camZ = -0.2500000000000156;
+var camAlpha = -23.1;
+var camBeta =  18;
+*/
+var camX_spd = 0;
+var camY_spd = 0;
+var camZ_spd = 0;
+var camAlpha_spd = 0;
+var camBeta_spd = 0;
+
+//Keyboard events for camera movement
+window.addEventListener("keydown", keyDownHandler);
+window.addEventListener("keyup", keyUpHandler);
+
+//Camera movement keys
+const CAM_UP = "w";
+const CAM_DOWN = "s";
+const CAM_IN = "a";
+const CAM_OUT = "d";
+const CAM_LEFT = "x";
+const CAM_RIGHT = "z";
+const CAM_ROT_Z_UP = "e";
+const CAM_ROT_Z_DOWN = "q";
+const CAM_ROT_X_CLOCKWISE = "r";
+const CAM_ROT_X_COUNTERCLOCKWISE = "f";
+
+const XYZ_BASE_SPEED = 0.05;
+const ANGLE_BASE_SPEED = 1;
+
+//Game control keys
+const FLIPPER_RIGHT = "ArrowRight";
+const FLIPPER_LEFT = "ArrowLeft";
+const FLIPPER_SHOOT = "ArrowDown";
+
+//Key handlers
+function keyDownHandler(event){
+    console.log(camX + ", " + camY + ", " + camZ);
+    console.log(camAlpha + ", " + camBeta);
+    switch(event.key){
+        case(CAM_UP): camY_spd = XYZ_BASE_SPEED;break;
+        case(CAM_DOWN): camY_spd = -XYZ_BASE_SPEED;break;
+        case(CAM_LEFT): camZ_spd = XYZ_BASE_SPEED;break;
+        case(CAM_RIGHT): camZ_spd = -XYZ_BASE_SPEED;break;
+        case(CAM_IN): camX_spd = XYZ_BASE_SPEED;break;
+        case(CAM_OUT): camX_spd = -XYZ_BASE_SPEED;break;
+        case(CAM_ROT_X_CLOCKWISE): camAlpha_spd = ANGLE_BASE_SPEED;break;
+        case(CAM_ROT_X_COUNTERCLOCKWISE): camAlpha_spd = -ANGLE_BASE_SPEED;break;
+        case(CAM_ROT_Z_UP): camBeta_spd = ANGLE_BASE_SPEED;break;
+        case(CAM_ROT_Z_DOWN): camBeta_spd = -ANGLE_BASE_SPEED;break;
+    }
+}
+
+function keyUpHandler(event){
+    camX_spd = 0;
+    camY_spd = 0;
+    camZ_spd = 0;
+    camAlpha_spd = 0;
+    camBeta_spd = 0;
+}
 
 // Vertex shader
 var vs = `#version 300 es
@@ -99,13 +169,6 @@ void main() {
     //compose final color with texture
     color = vec4(texcol.rgb * tempColor, texcol.a);
 }`;
-
-var positionAttributeLocation = null;
-var normalAttributeLocation = null;
-var uvAttributeLocation = null;
-var textLocation = null;
-
-gLightDir = [-1.0, 0.0, 0.0, 0.0];
 
 async function main(){
     var canvas = document.getElementById("my-canvas");
@@ -215,38 +278,65 @@ async function main(){
 
 }
 
+let iter = 0;
+let iter2 = 0;
+let angleSpd = 2;
+let ball = new Ball(ballx, bally, ballz);
+ball.applyForce(0, 0.001); 
+let time = Date.now();
+let dt = 1000/30;
 function drawScene(){
-    // clear scene
-    gl.clearColor(0.0, 0.0, 0.0, 0.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-    // compose view and light
-    var viewMatrix = utils.MakeView(camX, camY, camZ, camAlpha, camBeta);
-
-    for(const key of objectKeys) {
-        let mesh = meshes[key];
-        var worldViewMatrix = utils.multiplyMatrices(viewMatrix, worldMatrices[key]);
-        var projectionMatrix = utils.multiplyMatrices(perspectiveMatrix, worldViewMatrix);
-
-        var lightDirMatrix = utils.sub3x3from4x4(utils.transposeMatrix(worldMatrices));
-        var lightDirectionTransformed = utils.normalize(utils.multiplyMatrix3Vector3(lightDirMatrix, directionalLight));
-
-        gl.uniform3fv(program.materialDiffColor, materialColor);
-        gl.uniform3fv(program.lightColor, directionalLightColor);
-        gl.uniform3fv(program.ambientLightColor, ambientLight);
-        gl.uniform3fv(program.ambientMaterial, ambientMaterial);
-        gl.uniform3fv(program.lightDir, lightDirectionTransformed);
-
-        gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(projectionMatrix));	
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.uniform1i(program.textureUniform, 0);
-
+    let currentTime = Date.now();
+    if(currentTime - time > dt){
+        time = currentTime;
+        // clear scene
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         
-        gl.bindVertexArray(vaos[key]);
-        gl.drawElements(gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0); 
+        //Camera movement
+        camX += camX_spd;
+        camY += camY_spd;
+        camZ += camZ_spd;
+        camAlpha += camAlpha_spd;
+        camBeta += camBeta_spd;
+
+        ball.update();
+        if(ball.z < 0) ball.applyForce(0, 0.001); 
+
+        // compose view and light
+        let viewMatrix = utils.MakeView(camX, camY, camZ, camAlpha, camBeta);
+
+        worldMatrices["ball"] = ball.getWorldMatrix();
+        worldMatrices["rightFlipper"] = utils.multiplyMatrices(worldMatrices["rightFlipper"], utils.MakeRotateYMatrix(angleSpd));
+        worldMatrices["leftFlipper"] = utils.multiplyMatrices(worldMatrices["leftFlipper"], utils.MakeRotateYMatrix(-angleSpd));
+
+        for(const key of objectKeys) {
+            let mesh = meshes[key];
+            var worldViewMatrix = utils.multiplyMatrices(viewMatrix, worldMatrices[key]);
+            var projectionMatrix = utils.multiplyMatrices(perspectiveMatrix, worldViewMatrix);
+
+            var lightDirMatrix = utils.sub3x3from4x4(utils.transposeMatrix(worldMatrices));
+            var lightDirectionTransformed = utils.normalize(utils.multiplyMatrix3Vector3(lightDirMatrix, directionalLight));
+
+            gl.uniform3fv(program.materialDiffColor, materialColor);
+            gl.uniform3fv(program.lightColor, directionalLightColor);
+            gl.uniform3fv(program.ambientLightColor, ambientLight);
+            gl.uniform3fv(program.ambientMaterial, ambientMaterial);
+            gl.uniform3fv(program.lightDir, lightDirectionTransformed);
+
+            gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(projectionMatrix));	
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.uniform1i(program.textureUniform, 0);
+
+            
+            gl.bindVertexArray(vaos[key]);
+            gl.drawElements(gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0); 
+        }
+        
+        window.requestAnimationFrame(drawScene);
+    } else {
+        window.requestAnimationFrame(drawScene);
     }
-    
-    window.requestAnimationFrame(drawScene);
 }
