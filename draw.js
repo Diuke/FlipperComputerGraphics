@@ -5,7 +5,6 @@ var canvas = null;
 var meshes = {};
 var worldMatrices = [];
 var bodyLocalMatrix = null;
-var gLightDir = [-1.0, 0.0, 0.0, 0.0];
 var locationMatrices = [];
 var vaos = [];
 var walls = [];
@@ -17,20 +16,6 @@ var objectKeys = [
     "dr1" , "dr2" , "dr3" , "dr4" , "dr5" , "dr6",
     "dl1" , "dl2" , "dl3" , "dl4" , "dl5" , "dl6"
 ]
-
-//Lights and colors constants
-var materialColor = [0.0, 0.0, 0.0];
-var ambientLight = [0.9, 0.9, 0.9];
-var ambientMaterial = [0.9, 0.9, 0.9];
-var emission = [1.0, 1.0, 1.0];    
-var dirLightAlpha = utils.degToRad(60);
-var dirLightBeta = utils.degToRad(50);
-var directionalLight = [
-    Math.cos(dirLightAlpha) * Math.cos(dirLightBeta),
-    Math.sin(dirLightAlpha),
-    Math.cos(dirLightAlpha) * Math.sin(dirLightBeta)
-];
-var directionalLightColor = [0.0, 0.0, 1.0];
 
 var ballx = -0.30053;
 var bally = 8.5335;
@@ -75,7 +60,18 @@ const CAM_ROT_Z_DOWN = "q";
 const CAM_ROT_X_CLOCKWISE = "r";
 const CAM_ROT_X_COUNTERCLOCKWISE = "f";
 
-const XYZ_BASE_SPEED = 0.05;
+const light1 = "1";
+const light2 = "2";
+const light3 = "3";
+const light4 = "4";
+const light5 = "5";
+const light6 = "6";
+const light7 = "7";
+const light8 = "8";
+const light9 = "9";
+const light0 = "0";
+
+const XYZ_BASE_SPEED = 0.1;
 const ANGLE_BASE_SPEED = 1;
 
 //Game control keys
@@ -86,8 +82,8 @@ const FLIPPER_UP = "ArrowUp";
 
 //Key handlers
 function keyDownHandler(event){
-    console.log(camX + ", " + camY + ", " + camZ);
-    console.log(camAlpha + ", " + camBeta);
+    //console.log(camX + ", " + camY + ", " + camZ);
+    //console.log(camAlpha + ", " + camBeta);
     switch(event.key){
         case(CAM_UP): camY_spd = XYZ_BASE_SPEED;break;
         case(CAM_DOWN): camY_spd = -XYZ_BASE_SPEED;break;
@@ -104,6 +100,18 @@ function keyDownHandler(event){
         // case(FLIPPER_LEFT): ballx_spd = XYZ_BASE_SPEED; break;
         // case(FLIPPER_UP): ballz_spd = XYZ_BASE_SPEED; break;
         // case(FLIPPER_DOWN): ballz_spd = -XYZ_BASE_SPEED; break;
+        case(light1): glightDir[0] += 1;break;
+        case(light2): glightDir[0] += -1;break;
+        case(light3): glightDir[1] += 1;break;
+        case(light4): glightDir[1] += -1;break;
+        case(light5): glightDir[2] += 1;break;
+        case(light6): glightDir[2] += -1;break;
+
+        case(light7): defShaderParams.LDirTheta += 1;break;
+        case(light8): defShaderParams.LDirTheta += -1;break;
+        case(light9): defShaderParams.LDirPhi += 1;break;
+        case(light0): defShaderParams.LDirPhi += -1;break;
+
     }
 }
 
@@ -118,6 +126,28 @@ function keyUpHandler(event){
     // ballz_spd = 0.0;
 }
 
+defShaderParams = {
+	ambientType: "ambient",
+	diffuseType: "lambert",
+	ambientLightColor: [1.0,1.0,1.0,1.0],
+	diffuseColor: [0.2,0.2,0.2,1],
+	ambientMatColor: [0,0.1,0.1,1.0],
+	emitColor: [136,136,136,1],
+
+	lightColor: [1.0,1.0,1.0,1],
+	LPosX: 20,
+	LPosY: 30,
+	LPosZ: 50,
+	LDirTheta: 0,
+	LDirPhi: 0,
+	LConeOut: 30,
+	LConeIn: 80,
+	LDecay: 0,
+    LTarget: 61,
+    DTexMix: 0.8,
+
+}
+
 // Vertex shader
 var vs = `#version 300 es
 #define POSITION_LOCATION 0
@@ -129,17 +159,18 @@ layout(location = NORMAL_LOCATION) in vec3 in_norm;
 layout(location = UV_LOCATION) in vec2 in_uv;
 
 uniform mat4 pMatrix;
+uniform mat4 wMatrix;
 
 out vec3 fs_pos;
 out vec3 fs_norm;
 out vec2 fs_uv;
 
 void main() {
-	fs_pos = in_pos;
+	fs_pos = (wMatrix * vec4(in_pos, 1.0)).xyz;
 	fs_norm = in_norm;
 	fs_uv = in_uv;
 	
-	gl_Position = pMatrix * vec4(in_pos, 1);
+	gl_Position = pMatrix * vec4(in_pos, 1.0);
 }`;
 
 // Fragment shader
@@ -151,34 +182,60 @@ in vec3 fs_norm;
 in vec2 fs_uv;
 
 uniform sampler2D u_texture;
-uniform vec3 lightDir;
-uniform vec3 lightColor;
-uniform vec3 mDiffColor;
-uniform vec3 ambientLightColor;
-uniform vec3 ambientMaterial;
+uniform vec3 eyePos;
 
-uniform vec3 emit;
+uniform vec3 LPos;
+uniform vec3 LDir;
+uniform vec4 lightColor;
+
+uniform float DTexMix;
+uniform vec4 ambientLightColor;
+uniform vec4 diffuseColor;
+uniform vec4 ambientMatColor;
+uniform vec4 emitColor;
 
 out vec4 color;
 
+vec4 compDiffuse(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec4 diffColor) {
+	// Diffuse
+	// --> Lambert
+	vec4 diffuseLambert = lightCol * clamp(dot(normalVec, lightDir),0.0,1.0) * diffColor;
+	// ----> Select final component
+	return diffuseLambert;
+}
+
+
 void main() {
     vec4 texcol = texture(u_texture, fs_uv);
-    vec3 nNormal = normalize(fs_norm);
+    vec4 diffColor = diffuseColor * (1.0-DTexMix) + texcol * DTexMix;
+	vec4 ambColor = ambientMatColor * (1.0-DTexMix) + texcol * DTexMix;
+	vec4 emit = emitColor * (1.0-DTexMix) +
+				   texcol * DTexMix * 
+				   			max(max(emitColor.r, emitColor.g), emitColor.b);
+	
+	vec3 normalVec = normalize(fs_norm);
+	vec3 eyedirVec = normalize(eyePos - fs_pos);
+	
+	vec3 lightDir;
+	
+	vec4 lColor;
+	
+    vec4 ambientColor;
+    
+    lightDir = normalize(LPos - fs_pos);
+	lColor = lightColor;
 
-    vec3 lDir = normalize(lightDir);
+    ambientColor = ambientLightColor;
 
-    //Lambert color
-    vec3 diff = clamp(dot(-lDir,nNormal), 0.0, 1.0) * lightColor;
-    vec3 lambertColor = mDiffColor * diff;
+    // Ambient
+	vec4 ambient = ambientColor * ambColor;
+	// Diffuse
+	vec4 diffuse = compDiffuse(lightDir, lColor, normalVec, diffColor);
 
-    vec3 ambient = ambientLightColor * ambientMaterial;
-
-    //computing BRDF color
-    vec3 tempColor = clamp(lambertColor + ambient + emit, 0.0, 1.0);
-
-    //compose final color with texture
-    color = vec4(texcol.rgb * tempColor, texcol.a);
-}`;
+    vec4 out_color = clamp(ambient + diffuse, 0.0, 1.0);	
+  
+    color = vec4(out_color.rgb, 1.0);
+}`
 
 async function main(){
     var canvas = document.getElementById("my-canvas");
@@ -223,7 +280,7 @@ async function main(){
     var image = new Image();
     image.src = "StarWarsPinball.png";
     image.onload = function () {
-        //gl.activeTexture(gl.TEXTURE0);
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -243,14 +300,19 @@ async function main(){
     //gl.enableVertexAttribArray(program.textureCoordAttribute);
 
     program.WVPmatrixUniform = gl.getUniformLocation(program, "pMatrix");
+    program.WmatrixUniform = gl.getUniformLocation(program, "wMatrix");
     program.textureUniform = gl.getUniformLocation(program, "u_texture");
-    program.lightDir = gl.getUniformLocation(program, "lightDir");
+    program.LDir = gl.getUniformLocation(program, "LDir");
 
     program.ambientLightColor = gl.getUniformLocation(program, "ambientLightColor");
-    program.ambientMaterial = gl.getUniformLocation(program, "ambientMaterial");
-    program.materialDiffColor = gl.getUniformLocation(program, 'mDiffColor');
-    program.emissionColor = gl.getUniformLocation(program, "emit");    
+    program.ambientMaterial = gl.getUniformLocation(program, "ambientMatColor");
+    //program.materialDiffColor = gl.getUniformLocation(program, 'mDiffColor');
+    program.emissionColor = gl.getUniformLocation(program, "emitColor");    
     program.lightColor = gl.getUniformLocation(program, 'lightColor');
+    program.diffuseColor = gl.getUniformLocation(program, 'diffuseColor');
+    program.DTexMix = gl.getUniformLocation(program, 'DTexMix');
+
+    program.lightPos = gl.getUniformLocation(program, 'LPos')
 
     
     //Add all meshes 
@@ -288,6 +350,8 @@ async function main(){
 
 }
 
+
+
 let iter = 0;
 let iter2 = 0;
 let angleSpd = 2;
@@ -302,6 +366,17 @@ ball.applyForce(0, 0.001);
 let time = Date.now();
 let dt = 1000/30;
 function drawScene(){
+    var t = utils.degToRad(defShaderParams.LDirTheta);
+    var p = utils.degToRad(defShaderParams.LDirPhi);
+    //console.log(defShaderParams.LDirTheta + ", " + defShaderParams.LDirPhi);
+    //console.log(t + ", " + p);
+    directionalLight = [
+        
+        Math.sin(t) * Math.sin(p),
+        Math.cos(t),
+        Math.sin(t) * Math.cos(p)
+    ];
+
     let currentTime = Date.now();
     if(currentTime - time > dt){
         time = currentTime;
@@ -320,7 +395,7 @@ function drawScene(){
         // ball.y += bally_spd;
         // ball.z += ballz_spd;
         ball.update();
-        if(ball.z < 0) ball.applyForce(0, 0.001); 
+        //if(ball.z < 0) ball.applyForce(0, 0.001); 
 
         // compose view and light
         let viewMatrix = utils.MakeView(camX, camY, camZ, camAlpha, camBeta);
@@ -334,19 +409,26 @@ function drawScene(){
             var worldViewMatrix = utils.multiplyMatrices(viewMatrix, worldMatrices[key]);
             var projectionMatrix = utils.multiplyMatrices(perspectiveMatrix, worldViewMatrix);
 
-            var lightDirMatrix = utils.sub3x3from4x4(utils.transposeMatrix(worldMatrices));
+            var lightDirMatrix = utils.sub3x3from4x4(utils.transposeMatrix(worldMatrices[key]));
             var lightDirectionTransformed = utils.normalize(utils.multiplyMatrix3Vector3(lightDirMatrix, directionalLight));
 
-            gl.uniform3fv(program.materialDiffColor, materialColor);
-            gl.uniform3fv(program.lightColor, directionalLightColor);
-            gl.uniform3fv(program.ambientLightColor, ambientLight);
-            gl.uniform3fv(program.ambientMaterial, ambientMaterial);
+            //var lightDirectionTransformed =  utils.multiplyMatrixVector(worldMatrices[key], directionalLight);;
+
+            //gl.uniform3fv(program.materialDiffColor, defShaderParams);
+            gl.uniform4fv(program.lightColor, defShaderParams.lightColor);
+            gl.uniform4fv(program.diffuseColor, defShaderParams.diffuseColor);
+            gl.uniform4fv(program.ambientLightColor, defShaderParams.ambientLightColor);
+            gl.uniform4fv(program.ambientMaterial, defShaderParams.ambientMatColor);
+            gl.uniform4fv(program.emitColor, defShaderParams.emitColor);
             gl.uniform3fv(program.lightDir, lightDirectionTransformed);
+            gl.uniform1f(program.DTexMix, defShaderParams.DTexMix);
+            gl.uniform3fv(program.lightPos, [defShaderParams.LPosX, defShaderParams.LPosY, defShaderParams.LPosZ]);
 
             gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(projectionMatrix));	
+            gl.uniformMatrix4fv(program.WmatrixUniform, gl.FALSE, utils.transposeMatrix(worldMatrices[key]));	
 
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, texture);
+            //gl.activeTexture(gl.TEXTURE0);
+            //gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.uniform1i(program.textureUniform, 0);
 
             
