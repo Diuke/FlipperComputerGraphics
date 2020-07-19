@@ -8,6 +8,7 @@ var bodyLocalMatrix = null;
 var gLightDir = [-1.0, 0.0, 0.0, 0.0];
 var locationMatrices = [];
 var vaos = [];
+var walls = [];
 
 var objectKeys = [
     "body", "ball", 
@@ -34,7 +35,7 @@ var directionalLightColor = [0.0, 0.0, 1.0];
 var ballx = -0.30053;
 var bally = 8.5335;
 var ballz = -5.9728;
-var ballx_spd = 0.02;
+var ballx_spd = 0.0;
 var bally_spd = 0.0;
 var ballz_spd = 0.0;
 
@@ -80,7 +81,8 @@ const ANGLE_BASE_SPEED = 1;
 //Game control keys
 const FLIPPER_RIGHT = "ArrowRight";
 const FLIPPER_LEFT = "ArrowLeft";
-const FLIPPER_SHOOT = "ArrowDown";
+const FLIPPER_DOWN = "ArrowDown";
+const FLIPPER_UP = "ArrowUp";
 
 //Key handlers
 function keyDownHandler(event){
@@ -97,6 +99,11 @@ function keyDownHandler(event){
         case(CAM_ROT_X_COUNTERCLOCKWISE): camAlpha_spd = -ANGLE_BASE_SPEED;break;
         case(CAM_ROT_Z_UP): camBeta_spd = ANGLE_BASE_SPEED;break;
         case(CAM_ROT_Z_DOWN): camBeta_spd = -ANGLE_BASE_SPEED;break;
+
+        // case(FLIPPER_RIGHT): ballx_spd = -XYZ_BASE_SPEED; break;
+        // case(FLIPPER_LEFT): ballx_spd = XYZ_BASE_SPEED; break;
+        // case(FLIPPER_UP): ballz_spd = XYZ_BASE_SPEED; break;
+        // case(FLIPPER_DOWN): ballz_spd = -XYZ_BASE_SPEED; break;
     }
 }
 
@@ -106,6 +113,9 @@ function keyUpHandler(event){
     camZ_spd = 0;
     camAlpha_spd = 0;
     camBeta_spd = 0;
+    // ballx_spd = 0.0;
+    // bally_spd = 0.0;
+    // ballz_spd = 0.0;
 }
 
 // Vertex shader
@@ -282,6 +292,12 @@ let iter = 0;
 let iter2 = 0;
 let angleSpd = 2;
 let ball = new Ball(ballx, bally, ballz);
+let wallB1 = new Wall(-4.872800000000004, 3.8271999999999817,  2.14947000000000, 0);
+let wallB2 = new Wall(2.14947000000000, -2.5505299999999993, 3.8271999999999817, 1);
+let wallB3 = new Wall(-4.872800000000004, 3.8271999999999817,  -2.5505299999999993, 0);
+let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004, 1);
+let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 1);
+walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
 ball.applyForce(0, 0.001); 
 let time = Date.now();
 let dt = 1000/30;
@@ -300,6 +316,9 @@ function drawScene(){
         camAlpha += camAlpha_spd;
         camBeta += camBeta_spd;
 
+        // ball.x += ballx_spd;
+        // ball.y += bally_spd;
+        // ball.z += ballz_spd;
         ball.update();
         if(ball.z < 0) ball.applyForce(0, 0.001); 
 
