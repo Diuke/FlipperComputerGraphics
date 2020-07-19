@@ -300,10 +300,6 @@ async function main(){
     //Load all initial world matrices
     worldMatrices = getInitialWorldmatrices();
 
-    ball = new Ball(ballx, bally, ballz);
-    flipperLeft = new Flipper(0.6906, 8.4032, -5.6357+0.49,29.8,-3.24+15,-5.64,'left');
-    flipperRight = new Flipper(-1.307, 8.4032, -5.6357+0.49, 150.0,-3.24+15,-5.64, 'right');
-
     // Load all meshes
     var meshUrls = getMeshes();
     for(const key of objectKeys) {
@@ -392,13 +388,17 @@ async function main(){
 let iter = 0;
 let iter2 = 0;
 let angleSpd = 2;
-let ball = new Ball(ballx, bally, ballz);
+
+ball = new Ball();
+flipperLeft = new Flipper(0.6906, 8.4032, -5.6357+0.49,29.8,-3.24+15,-5.64,'left');
+flipperRight = new Flipper(-1.307, 8.4032, -5.6357+0.49, 150.0,-3.24+15,-5.64, 'right');
 let wallB1 = new Wall(-4.872800000000004, 3.8271999999999817,  2.14947000000000, 'wallB1');
 let wallB2 = new Wall(2.14947000000000, -2.5505299999999993, 3.8271999999999817, 'wallB2');
 let wallB3 = new Wall(-4.872800000000004, 3.8271999999999817,  -2.5505299999999993, 'wallB3');
 let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004, 'wallS1');
 let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 'wallS2');
 walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
+
 ball.applyForce(0.05, 1); 
 let time = Date.now();
 let dt = 1000/30;
