@@ -1,6 +1,7 @@
 const G = -0.0002;
 const FRICTION = 0.0001;
 const fps = 60;
+const flipperMoveSpeed = 15;
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -54,5 +55,71 @@ class Wall{
         this.l2 = l2;
         this.line = line;      
         this.type = type;  
+    }
+}
+
+class Flipper{
+    worldMatrix = null;
+    moveSpeed = 0.5;
+    constructor(x, y, z, a1, a2, a3, side){
+        this.side = side;
+        this.angle = 0;
+        this.maxAngle = 45;
+        this.angleSpeed = 0;
+        this.worldMatrix = utils.MakeWorld(x, y, z, a1, a2, a3, 1.0);
+        this.isMovingUp = false;
+        this.isMovingDown = false;
+        this.isOnFinalPos = false;
+        this.isOnInitPos = true;
+    }
+
+    getWorldMatrix(){
+        return this.worldMatrix;
+    }
+
+    update(){
+        if(this.isMovingUp){
+            if(!this.isOnFinalPos){
+                this.angle += flipperMoveSpeed;
+                if(this.side == 'left'){
+                    this.angleSpeed = -flipperMoveSpeed;
+                } else { //right
+                    this.angleSpeed = flipperMoveSpeed;
+                }
+            } else {
+                this.angleSpeed = 0;
+            }
+        } else if(this.isMovingDown){
+            if(!this.isOnInitPos){
+                this.angle -= flipperMoveSpeed;
+                if(this.side == 'left'){
+                    this.angleSpeed = flipperMoveSpeed;
+                } else { //right
+                    this.angleSpeed = -flipperMoveSpeed;
+                }
+            } else {
+                this.angleSpeed = 0;
+            }
+        } else {
+            this.angleSpeed = 0;
+        }
+        if(this.angle >= this.maxAngle) {
+            this.isOnFinalPos = true;
+            this.angle = this.maxAngle;
+        }
+        else if(this.angle <= 0){
+            this.angle = 0;
+            this.isMovingDown = false;
+            this.isMovingUp = false;
+            this.isOnInitPos = true;
+        } else {
+            this.isOnInitPos = false;
+            this.isOnFinalPos = false;
+        }
+        if(this.angleSpeed != 0){
+            var rotate = utils.MakeRotateYMatrix(this.angleSpeed);
+            this.worldMatrix = utils.multiplyMatrices(this.worldMatrix, rotate);
+        }
+        
     }
 }

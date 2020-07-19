@@ -9,6 +9,11 @@ var locationMatrices = [];
 var vaos = [];
 var walls = [];
 
+//Objects
+var ball;
+var flipperLeft;
+var flipperRight;
+
 var objectKeys = [
     "body", "ball", 
     "leftFlipper", "rightFlipper" , 
@@ -96,16 +101,21 @@ function keyDownHandler(event){
         case(CAM_ROT_Z_UP): camBeta_spd = ANGLE_BASE_SPEED;break;
         case(CAM_ROT_Z_DOWN): camBeta_spd = -ANGLE_BASE_SPEED;break;
 
-        // case(FLIPPER_RIGHT): ballx_spd = -XYZ_BASE_SPEED; break;
-        // case(FLIPPER_LEFT): ballx_spd = XYZ_BASE_SPEED; break;
-        // case(FLIPPER_UP): ballz_spd = XYZ_BASE_SPEED; break;
-        // case(FLIPPER_DOWN): ballz_spd = -XYZ_BASE_SPEED; break;
-        case(light1): glightDir[0] += 1;break;
-        case(light2): glightDir[0] += -1;break;
-        case(light3): glightDir[1] += 1;break;
-        case(light4): glightDir[1] += -1;break;
-        case(light5): glightDir[2] += 1;break;
-        case(light6): glightDir[2] += -1;break;
+        case(FLIPPER_RIGHT): ballx_spd = -XYZ_BASE_SPEED; break;
+        case(FLIPPER_LEFT): ballx_spd = XYZ_BASE_SPEED; break;
+        case(FLIPPER_UP): ballz_spd = XYZ_BASE_SPEED; break;
+        case(FLIPPER_DOWN): ballz_spd = -XYZ_BASE_SPEED; break;
+
+        case(light1):{
+            flipperLeft.isMovingUp = true;
+            flipperLeft.isMovingDown = false;
+            break;
+        }
+        case(light2): {
+            flipperRight.isMovingUp = true;
+            flipperRight.isMovingDown = false;
+            break;
+        } 
 
         case(light7): defShaderParams.LDirTheta += 1;break;
         case(light8): defShaderParams.LDirTheta += -1;break;
@@ -116,14 +126,37 @@ function keyDownHandler(event){
 }
 
 function keyUpHandler(event){
-    camX_spd = 0;
-    camY_spd = 0;
-    camZ_spd = 0;
-    camAlpha_spd = 0;
-    camBeta_spd = 0;
-    // ballx_spd = 0.0;
-    // bally_spd = 0.0;
-    // ballz_spd = 0.0;
+    switch(event.key){
+        case(CAM_UP): camY_spd = 0;break;
+        case(CAM_DOWN): camY_spd = 0;break;
+        case(CAM_LEFT): camZ_spd = 0;break;
+        case(CAM_RIGHT): camZ_spd = 0;break;
+        case(CAM_IN): camX_spd = 0;break;
+        case(CAM_OUT): camX_spd = 0;break;
+        case(CAM_ROT_X_CLOCKWISE): camAlpha_spd = 0;break;
+        case(CAM_ROT_X_COUNTERCLOCKWISE): camAlpha_spd = 0;break;
+        case(CAM_ROT_Z_UP): camBeta_spd = 0;break;
+        case(CAM_ROT_Z_DOWN): camBeta_spd = -0;break;
+
+        case(FLIPPER_RIGHT): ballx_spd = 0; break;
+        case(FLIPPER_LEFT): ballx_spd = 0; break;
+        case(FLIPPER_UP): ballz_spd = 0; break;
+        case(FLIPPER_DOWN): ballz_spd = 0; break;
+
+        case(light1): {
+            flipperLeft.isMovingDown = true;
+            flipperLeft.isMovingUp = false;
+            break;
+        }
+        case(light2):{
+            flipperRight.isMovingDown = true;
+            flipperRight.isMovingUp = false;
+            break;
+        }
+        
+
+    }
+    
 }
 
 defShaderParams = {
@@ -267,6 +300,10 @@ async function main(){
     //Load all initial world matrices
     worldMatrices = getInitialWorldmatrices();
 
+    ball = new Ball(ballx, bally, ballz);
+    flipperLeft = new Flipper(0.6906, 8.4032, -5.6357+0.49,29.8,-3.24+15,-5.64,'left');
+    flipperRight = new Flipper(-1.307, 8.4032, -5.6357+0.49, 150.0,-3.24+15,-5.64, 'right');
+
     // Load all meshes
     var meshUrls = getMeshes();
     for(const key of objectKeys) {
@@ -355,14 +392,14 @@ async function main(){
 let iter = 0;
 let iter2 = 0;
 let angleSpd = 2;
-let ball = new Ball(ballx, bally, ballz);
-let wallB1 = new Wall(-4.872800000000004, 3.8271999999999817,  2.14947000000000, 0);
-let wallB2 = new Wall(2.14947000000000, -2.5505299999999993, 3.8271999999999817, 1);
-let wallB3 = new Wall(-4.872800000000004, 3.8271999999999817,  -2.5505299999999993, 0);
-let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004, 1);
-let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 1);
-walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
-ball.applyForce(0, 0.001); 
+
+//let wallB1 = new Wall(-4.872800000000004, 3.8271999999999817,  2.14947000000000, 0);
+//let wallB2 = new Wall(2.14947000000000, -2.5505299999999993, 3.8271999999999817, 1);
+//let wallB3 = new Wall(-4.872800000000004, 3.8271999999999817,  -2.5505299999999993, 0);
+//let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004, 1);
+//let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 1);
+//walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
+//ball.applyForce(0, 0.001); 
 let time = Date.now();
 let dt = 1000/30;
 function drawScene(){
@@ -391,18 +428,20 @@ function drawScene(){
         camAlpha += camAlpha_spd;
         camBeta += camBeta_spd;
 
-        // ball.x += ballx_spd;
-        // ball.y += bally_spd;
-        // ball.z += ballz_spd;
+        ball.xSpeed = ballx_spd;
+        //ball.y += bally;
+        ball.zSpeed = ballz_spd;
         ball.update();
+        flipperRight.update();
+        flipperLeft.update();
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
 
         // compose view and light
         let viewMatrix = utils.MakeView(camX, camY, camZ, camAlpha, camBeta);
 
         worldMatrices["ball"] = ball.getWorldMatrix();
-        worldMatrices["rightFlipper"] = utils.multiplyMatrices(worldMatrices["rightFlipper"], utils.MakeRotateYMatrix(angleSpd));
-        worldMatrices["leftFlipper"] = utils.multiplyMatrices(worldMatrices["leftFlipper"], utils.MakeRotateYMatrix(-angleSpd));
+        worldMatrices["rightFlipper"] = flipperLeft.getWorldMatrix();
+        worldMatrices["leftFlipper"] = flipperRight.getWorldMatrix();
 
         for(const key of objectKeys) {
             let mesh = meshes[key];
