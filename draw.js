@@ -17,7 +17,7 @@ var objectKeys = [
     "dl1" , "dl2" , "dl3" , "dl4" , "dl5" , "dl6"
 ]
 
-var ballx = -0.30053;
+var ballx = -2.5;
 var bally = 8.5335;
 var ballz = -5.9728;
 var ballx_spd = 0.0;
@@ -356,13 +356,13 @@ let iter = 0;
 let iter2 = 0;
 let angleSpd = 2;
 let ball = new Ball(ballx, bally, ballz);
-let wallB1 = new Wall(-4.872800000000004, 3.8271999999999817,  2.14947000000000, 0);
-let wallB2 = new Wall(2.14947000000000, -2.5505299999999993, 3.8271999999999817, 1);
-let wallB3 = new Wall(-4.872800000000004, 3.8271999999999817,  -2.5505299999999993, 0);
-let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004, 1);
-let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 1);
+let wallB1 = new Wall(-4.872800000000004, 3.8271999999999817,  2.14947000000000, 'wallB1');
+let wallB2 = new Wall(2.14947000000000, -2.5505299999999993, 3.8271999999999817, 'wallB2');
+let wallB3 = new Wall(-4.872800000000004, 3.8271999999999817,  -2.5505299999999993, 'wallB3');
+let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004, 'wallS1');
+let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 'wallS2');
 walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
-ball.applyForce(0, 0.001); 
+ball.applyForce(0.05, 1); 
 let time = Date.now();
 let dt = 1000/30;
 function drawScene(){
@@ -391,9 +391,13 @@ function drawScene(){
         camAlpha += camAlpha_spd;
         camBeta += camBeta_spd;
 
+        
+
         // ball.x += ballx_spd;
-        // ball.y += bally_spd;
-        // ball.z += ballz_spd;
+        // ball.z += bally_spd;
+        //ball.y += bally_spd;
+        
+        ball.collides(walls);
         ball.update();
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
 

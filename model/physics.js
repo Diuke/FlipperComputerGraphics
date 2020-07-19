@@ -1,32 +1,41 @@
-const G = -0.0002;
-const FRICTION = 0.0001;
+const GRAVITY = -0.01;
+const FRICTION = 0.98;
 const fps = 60;
+const BOUNCE = 0.75;
 
 class Ball {
     //BALL ONLY MOVES IN:
     // Z -> UP AND DOWN (POSITIVE UP - NEGATIVE DOWN)
     // X -> LEFT AND RIGHT (POSITIVE LEFT - NEGATIVE RIGHT)
     worldMatrix = null;
-    constructor(x,y,z){
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    constructor(){
+        this.initBallPosition();
         this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, 0.0, 0.0, 1.0);
         this.xSpeed = 0;
         this.zSpeed = 0;
         this.xAcceleration = 0;
         this.zAcceleration = 0;
+        this.mass = 1;
+    }
+
+    initBallPosition(){
+        this.x = -2.5;
+        this.y = 8.5335;
+        this.z = -5.9728;
     }
 
     applyForce(fX, fZ){
-        this.xAcceleration += fX;
-        this.zAcceleration += fZ;
+        this.xSpeed += fX;
+        this.zSpeed += fZ;
+        
     }
 
     update(){
-        this.z = this.z + this.zSpeed;
-        this.x = this.x + this.xSpeed;
-        console.log(this.x + ", " + this.z);
+        this.zSpeed += GRAVITY;
+        this.z += this.zSpeed;
+        this.x += this.xSpeed;
+        
+        console.log(this.xSpeed + ", " + this.zSpeed);
         
         this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, 0.0, 0.0, 1.0);
     }
@@ -35,13 +44,49 @@ class Ball {
         return this.worldMatrix;
     }
     
-    collidesWall(walls){
-        for(var i=0; i < size(walls); i++) {
-            if(this.x == walls(i).line && walls(i).type == 0){
-                this.xSpeed = -1*this.xSpeed;
-            }else if(this.y == walls(i).line && walls(i).type == 1){
-                this.zSpeed = -1*this.zSpeed;
-            }        
+    collides(walls){
+        for(var i=0; i < walls.length; i++) {
+            // logic goes here
+
+            // bottom bound / floor
+            if (this.z <= walls[i].line && (walls[i].type == 'wallS1' ||  walls[i].type == 'wallS2')) {
+                if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
+                    this.z = walls[i].line;
+                    this.zSpeed *= -BOUNCE;
+                    this.xSpeed *=FRICTION;
+                }else{
+                    this.initBallPosition();
+                    //this.applyForce(0.05,1);
+                }
+            }
+            // top bound / ceiling
+            if (walls[i].type == 'wallB2' && this.z  >= walls[i].line) {
+                this.z = walls[i].line;
+                console.log('entro');
+                this.zSpeed *= -BOUNCE;
+                this.xSpeed *=FRICTION;
+            }
+        
+            // left bound
+            if (walls[i].type == 'wallB1' && this.x  >= walls[i].line) {
+                this.x = walls[i].line;
+                this.xSpeed *= -BOUNCE;
+            }
+            // right bound
+            if (walls[i].type == 'wallB3' && this.x  <= walls[i].line) {
+                this.x = walls[i].line;
+                this.xSpeed *= -BOUNCE;
+            }
+        
+            // reset insignificant amounts to 0
+            if (this.xSpeed < 0.001 && this.xSpeed > -0.001) {
+                this.xSpeed = 0
+            }
+            if (this.ZSpeed < 0.001 && this.ZSpeed > -0.001) {
+                this.ZSpeed = 0
+            }
+        
+    
         }
         
     }
@@ -49,7 +94,7 @@ class Ball {
 
 class Wall{    
     constructor(l1,l2,line, type){
-        //l1 = limit 1, l2 = limit 2, line = x or y position of the wall, type = 0 if vertical and 1 if horizontal
+        //l1 = limit 1, l2 = limit 2, line = x or y position of the wall
         this.l1 = l1;
         this.l2 = l2;
         this.line = line;      
