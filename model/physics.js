@@ -38,7 +38,7 @@ class Ball {
         this.xSpeed = this.xSpeed + this.xAcceleration;
         this.z = this.z + this.zSpeed;
         this.x = this.x + this.xSpeed;
-        console.log(this.xSpeed + ", " + this.zSpeed);
+        //console.log(this.xSpeed + ", " + this.zSpeed);
         
         this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, 0.0, 0.0, 1.0);
     }
