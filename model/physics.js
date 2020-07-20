@@ -5,6 +5,7 @@ const fps = 60;
 const flipperMoveSpeed = 15;
 const BOUNCE = 0.75;
 const CENTER_X = -0.2;
+const BUMPER_BOUNCE = 1.25;
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -59,7 +60,7 @@ class Ball {
         this.z += this.zSpeed; 
         this.x += this.xSpeed;
         
-        console.log(this.xSpeed + ", " + this.zSpeed);
+        //console.log(this.xSpeed + ", " + this.zSpeed);-----REMOVE WHEN FINISHED
         
         this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, 0.0, 0.0, 1.0);
     }
@@ -68,7 +69,7 @@ class Ball {
         return this.worldMatrix;
     }
     
-    collides(walls){
+    collides(walls, bumpers){
         for(var i=0; i < walls.length; i++) {
             // logic goes here
 
@@ -86,7 +87,7 @@ class Ball {
             // top bound / ceiling
             if (walls[i].type == 'wallB2' && this.z  >= walls[i].line) {
                 this.z = walls[i].line;
-                console.log('entro');
+                //console.log('entro'); -----REMOVE WHEN FINISHED
                 this.zSpeed *= -BOUNCE;
                 //this.xSpeed *=FRICTION;
             }
@@ -112,6 +113,15 @@ class Ball {
         
     
         }
+        for(var j=0; j < bumpers.length; j++){
+            if(Math.sqrt(Math.pow((bumpers[j].x - this.x),2) + Math.pow((bumpers[j].z - this.z), 2)) <= bumpers[j].r ){
+                //this.x = bumpers[j].x+bumpers[j].r;
+                console.log('BUMPER'+bumpers[j].name);
+                this.xSpeed *= -BUMPER_BOUNCE;
+                this.zSpeed *= -BUMPER_BOUNCE;
+            }
+
+        }
         
     }
 }
@@ -123,6 +133,15 @@ class Wall{
         this.l2 = l2;
         this.line = line;      
         this.type = type;  
+    }
+}
+
+class Bumper{
+    constructor(x, z, r, name){
+        this.x = x;
+        this.z = z;
+        this.r = r;
+        this.name = name;
     }
 }
 

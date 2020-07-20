@@ -311,7 +311,7 @@ async function main(){
     texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     var image = new Image();
-    image.src = "StarWarsPinball2.png";
+    image.src = "StarWarsPinball1.png";
     image.onload = function () {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -392,14 +392,19 @@ let angleSpd = 2;
 ball = new Ball();
 flipperLeft = new Flipper(0.6906, 8.4032, -5.6357+0.49,29.8,-3.24+15,-5.64,'left');
 flipperRight = new Flipper(-1.307, 8.4032, -5.6357+0.49, 150.0,-3.24+15,-5.64, 'right');
-let wallB1 = new Wall(-4.872800000000004, 3.8271999999999817,  2.14947000000000, 'wallB1');
-let wallB2 = new Wall(2.14947000000000, -2.5505299999999993, 3.8271999999999817, 'wallB2');
-let wallB3 = new Wall(-4.872800000000004, 3.8271999999999817,  -2.5505299999999993, 'wallB3');
-let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004, 'wallS1');
-let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 'wallS2');
+let wallB1 = new Wall(-4.8728, 3.8272,  2.14947, 'wallB1');
+let wallB2 = new Wall(2.14947, -2.55053, 3.8272, 'wallB2');
+let wallB3 = new Wall(-4.8728, 3.8272,  -2.55053, 'wallB3');
+let wallS1 = new Wall(2.14947, 0.89947, -4.8728, 'wallS1');
+let wallS2 = new Wall(-1.60053, -2.55053, -4.8728, 'wallS2');
+let B1 = new Bumper(0.7, 0.605, 0.3125, 'B1');
+let B2 = new Bumper(-0.2, 1.4272, 0.3125, 'B2');
+let B3 = new Bumper(-1.1, 0.605, 0.3125, 'B3');
 walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
 
 //ball.applyForce(0.5,0.5);  
+bumpers = [B1, B2, B3];
+ball.applyForce(1,1); 
 let time = Date.now();
 let dt = 1000/30;
 function drawScene(){
@@ -430,13 +435,12 @@ function drawScene(){
 
         
 
-        ball.xSpeed = ballx_spd;
-        ball.zSpeed = ballz_spd;
-        console.log(ball.xSpeed + ", " + ball.zSpeed);
+        //ball.xSpeed = ballx_spd;
+        //ball.zSpeed = ballz_spd;
+        //console.log(ball.xSpeed + ", " + ball.zSpeed);-----REMOVE WHEN FINISHED
         
-        //ball.collides(walls);
-        //ball.update();
-        ball.updateMove();
+        ball.collides(walls, bumpers);
+        ball.update();
         flipperRight.update();
         flipperLeft.update();
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
