@@ -76,7 +76,7 @@ const light8 = "8";
 const light9 = "9";
 const light0 = "0";
 
-const XYZ_BASE_SPEED = 0.1;
+const XYZ_BASE_SPEED = 1;
 const ANGLE_BASE_SPEED = 1;
 
 //Game control keys
@@ -101,10 +101,10 @@ function keyDownHandler(event){
         case(CAM_ROT_Z_UP): camBeta_spd = ANGLE_BASE_SPEED;break;
         case(CAM_ROT_Z_DOWN): camBeta_spd = -ANGLE_BASE_SPEED;break;
 
-        case(FLIPPER_RIGHT): ballx_spd = -XYZ_BASE_SPEED; break;
-        case(FLIPPER_LEFT): ballx_spd = XYZ_BASE_SPEED; break;
-        case(FLIPPER_UP): ballz_spd = XYZ_BASE_SPEED; break;
-        case(FLIPPER_DOWN): ballz_spd = -XYZ_BASE_SPEED; break;
+        case(FLIPPER_RIGHT): ballx_spd = -0.01; break;
+        case(FLIPPER_LEFT): ballx_spd = 0.01; break;
+        case(FLIPPER_UP): ballz_spd = 0.01; break;
+        case(FLIPPER_DOWN): ballz_spd = -0.01; break;
 
         case(light1):{
             flipperLeft.isMovingUp = true;
@@ -399,7 +399,7 @@ let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004,
 let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 'wallS2');
 walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
 
-ball.applyForce(1,1); 
+//ball.applyForce(0.5,0.5);  
 let time = Date.now();
 let dt = 1000/30;
 function drawScene(){
@@ -430,12 +430,13 @@ function drawScene(){
 
         
 
-        //ball.xSpeed = ballx_spd;
-        //ball.zSpeed = ballz_spd;
+        ball.xSpeed = ballx_spd;
+        ball.zSpeed = ballz_spd;
         console.log(ball.xSpeed + ", " + ball.zSpeed);
         
-        ball.collides(walls);
-        ball.update();
+        //ball.collides(walls);
+        //ball.update();
+        ball.updateMove();
         flipperRight.update();
         flipperLeft.update();
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
