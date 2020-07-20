@@ -32,18 +32,6 @@ class Ball {
     }
 
     update(){
-        //Gravity just for Z
-        this.zSpeed += GRAVITY;
-
-        //Friction for Z
-        if(this.zSpeed > 0) {this.zSpeed -= FRICTION;}
-        else if(this.zSpeed < 0){this.zSpeed += FRICTION;}
-        else {this.zSpeed += 0;}
-
-        //Friction for X
-        if(this.xSpeed > 0) {this.xSpeed -= FRICTION;}
-        else if(this.xSpeed < 0){this.xSpeed += FRICTION;}
-        else {this.xSpeed += 0;}
 
         this.z += this.zSpeed;
         this.x += this.xSpeed;

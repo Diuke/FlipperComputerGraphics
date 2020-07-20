@@ -399,7 +399,7 @@ let wallS1 = new Wall(2.149470000000001, 0.8994700000000002, -4.872800000000004,
 let wallS2 = new Wall(-1.600530000000001, -2.5505299999999993, -4.872800000000004, 'wallS2');
 walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
 
-ball.applyForce(1,1); 
+//ball.applyForce(1,1); 
 let time = Date.now();
 let dt = 1000/30;
 function drawScene(){
@@ -430,11 +430,11 @@ function drawScene(){
 
         
 
-        //ball.xSpeed = ballx_spd;
-        //ball.zSpeed = ballz_spd;
+        ball.xSpeed = ballx_spd;
+        ball.zSpeed = ballz_spd;
         console.log(ball.x + ", " + ball.z);
         
-        ball.collides(walls);
+        //ball.collides(walls);
         ball.update();
         flipperRight.update();
         flipperLeft.update();
