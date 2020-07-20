@@ -432,7 +432,7 @@ function drawScene(){
 
         //ball.xSpeed = ballx_spd;
         //ball.zSpeed = ballz_spd;
-        console.log(ball.x + ", " + ball.z);
+        console.log(ball.xSpeed + ", " + ball.zSpeed);
         
         ball.collides(walls);
         ball.update();

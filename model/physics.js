@@ -1,5 +1,5 @@
 const GRAVITY = -0.01;
-const FRICTION = 0;
+const FRICTION = 0.95;
 const fps = 60;
 const flipperMoveSpeed = 15;
 const BOUNCE = 0.75;
@@ -14,8 +14,6 @@ class Ball {
         this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, 0.0, 0.0, 1.0);
         this.xSpeed = 0;
         this.zSpeed = 0;
-        this.xAcceleration = 0;
-        this.zAcceleration = 0;
         this.mass = 1;
     }
 
@@ -34,16 +32,6 @@ class Ball {
     update(){
         //Gravity just for Z
         this.zSpeed += GRAVITY;
-
-        //Friction for Z
-        if(this.zSpeed > 0) {this.zSpeed -= FRICTION;}
-        else if(this.zSpeed < 0){this.zSpeed += FRICTION;}
-        else {this.zSpeed += 0;}
-
-        //Friction for X
-        if(this.xSpeed > 0) {this.xSpeed -= FRICTION;}
-        else if(this.xSpeed < 0){this.xSpeed += FRICTION;}
-        else {this.xSpeed += 0;}
 
         this.z += this.zSpeed;
         this.x += this.xSpeed;
