@@ -1,5 +1,5 @@
 const GRAVITY = -0.01;
-const FRICTION = 0.98;
+const FRICTION = 0;
 const fps = 60;
 const flipperMoveSpeed = 15;
 const BOUNCE = 0.75;
@@ -32,7 +32,19 @@ class Ball {
     }
 
     update(){
+        //Gravity just for Z
         this.zSpeed += GRAVITY;
+
+        //Friction for Z
+        if(this.zSpeed > 0) {this.zSpeed -= FRICTION;}
+        else if(this.zSpeed < 0){this.zSpeed += FRICTION;}
+        else {this.zSpeed += 0;}
+
+        //Friction for X
+        if(this.xSpeed > 0) {this.xSpeed -= FRICTION;}
+        else if(this.xSpeed < 0){this.xSpeed += FRICTION;}
+        else {this.xSpeed += 0;}
+
         this.z += this.zSpeed;
         this.x += this.xSpeed;
         
@@ -56,7 +68,7 @@ class Ball {
                     this.zSpeed *= -BOUNCE;
                     this.xSpeed *=FRICTION;
                 }else{
-                    this.initBallPosition();
+                    //this.initBallPosition();
                     //this.applyForce(0.05,1);
                 }
             }
@@ -106,6 +118,9 @@ class Wall{
 class Flipper{
     worldMatrix = null;
     moveSpeed = 0.5;
+
+    hitbox = [];
+
     constructor(x, y, z, a1, a2, a3, side){
         this.side = side;
         this.angle = 0;
