@@ -407,14 +407,15 @@ let wallB3 = new Wall(-4.8728, 3.8272,  -2.55053, 'wallB3');
 let wallS1 = new Wall(2.14947, 0.89947, -4.8728, 'wallS1');
 let wallS2 = new Wall(-1.60053, -2.55053, -4.8728, 'wallS2');
 let wallGO = new Wall(0.89947, -1.60053, -6.1728, 'wallGO');
-let B1 = new Bumper(0.7, 0.605, 0.3125, 'B1');
-let B2 = new Bumper(-0.2, 1.4272, 0.3125, 'B2');
-let B3 = new Bumper(-1.1, 0.605, 0.3125, 'B3');
+var bumper_radius = 0.4;
+let B1 = new Bumper(0.7, 0.605, bumper_radius, 'B1');
+let B2 = new Bumper(-0.2, 1.4272, bumper_radius, 'B2');
+let B3 = new Bumper(-1.1, 0.605, bumper_radius, 'B3');
 walls = [wallB1, wallB2, wallB3, wallS1, wallS2, wallGO];
 bumpers = [B1, B2, B3];
 //ball.applyForce(0.3,0.6); 
 let time = Date.now();
-let dt = 1000/30;
+let dt = 1000/50;
 function drawScene(){
     var t = utils.degToRad(defShaderParams.LDirTheta);
     var p = utils.degToRad(defShaderParams.LDirPhi);
@@ -450,8 +451,11 @@ function drawScene(){
         
         puller.update(puller_hold, ball);
         if(ballPushed){
-            ball.collides(walls, bumpers, puller);
             ball.update();
+            ball.collides(walls, bumpers, puller);
+            if(!isPlaying){
+                ball.update();
+            }
         }
         
         flipperRight.update();
