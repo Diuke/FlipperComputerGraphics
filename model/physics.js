@@ -1,6 +1,6 @@
 const GRAVITY = -0.01;
-const FRICTION = 0.0005;
-const CENTER_DRAG = 0.00001;
+const FRICTION = 0.00005;
+const CENTER_DRAG = 0.002;
 const fps = 60;
 const flipperMoveSpeed = 15;
 const BOUNCE = 0.75;
@@ -69,20 +69,17 @@ class Ball {
         return this.worldMatrix;
     }
     
-    collides(walls, bumpers){
+    collides(walls, bumpers, puller){
         for(var i=0; i < walls.length; i++) {
             // logic goes here
 
             // bottom bound / floor
-            if (this.z <= walls[i].line && (walls[i].type == 'wallS1' ||  walls[i].type == 'wallS2')) {
+            if (this.z <= walls[i].line && this.z >= (walls[i].line - 0.5) && (walls[i].type == 'wallS1' ||  walls[i].type == 'wallS2')) {
                 if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
                     this.z = walls[i].line;
                     this.zSpeed *= -BOUNCE;
                     //this.xSpeed *=FRICTION;
-                }else{
-                    //this.initBallPosition();
-                    //this.applyForce(0.05,1);
-                }
+                }                
             }
             // top bound / ceiling
             if (walls[i].type == 'wallB2' && this.z  >= walls[i].line) {
@@ -102,6 +99,19 @@ class Ball {
                 this.x = walls[i].line;
                 this.xSpeed *= -BOUNCE;
             }
+            //bottom --- game over
+            if(walls[i].type == 'wallGO' && this.z <= walls[i].line){
+                if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
+                    console.log('game over');
+                    this.initBallPosition();
+                    puller.initialPos();
+                    puller.count = 0;
+                    this.xSpeed = 0;
+                    this.zSpeed = 0;
+                    isPlaying = false;
+                    ballPushed = false;
+                }
+            }
         
             // reset insignificant amounts to 0
             if (this.xSpeed < 0.001 && this.xSpeed > -0.001) {
@@ -113,6 +123,7 @@ class Ball {
         
     
         }
+        //check for all bumpers if radius < distance btw bumper center and current position
         for(var j=0; j < bumpers.length; j++){
             if(Math.sqrt(Math.pow((bumpers[j].x - this.x),2) + Math.pow((bumpers[j].z - this.z), 2)) <= bumpers[j].r ){
                 //this.x = bumpers[j].x+bumpers[j].r;
@@ -142,6 +153,40 @@ class Bumper{
         this.z = z;
         this.r = r;
         this.name = name;
+    }
+}
+
+class Puller{
+    constructor(){
+        this.initialPos();
+        this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, -90.0, 0.0, 1.0);
+        this.count = 0;
+    }
+    initialPos(){
+        this.x = -2.5264;
+        this.y = 8.3925;
+        this.z = -7;
+    }
+    getWorldMatrix(){
+        return this.worldMatrix;
+    }
+    update(puller_hold, ball){
+        if(puller_hold == true && ballPushed == false){
+            if(this.count < 18){
+                this.count += 1;
+                this.z -= 0.05;
+            }
+            console.log(this.count);           
+            isPlaying = true;
+        }else if(puller_hold == false && this.count > 0 && isPlaying == true && ballPushed==false){
+            while(this.z < -7){
+                this.z += 0.05;
+            }        
+            ball.applyForce(0, this.count/30);
+            ballPushed = true;
+        }
+        this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, -90.0, 0.0, 1.0);
+
     }
 }
 

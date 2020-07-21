@@ -8,6 +8,8 @@ var bodyLocalMatrix = null;
 var locationMatrices = [];
 var vaos = [];
 var walls = [];
+var isPlaying = false;
+var ballPushed = false;
 
 //Objects
 var ball;
@@ -28,12 +30,13 @@ var ballz = -5.9728;
 var ballx_spd = 0.0;
 var bally_spd = 0.0;
 var ballz_spd = 0.0;
+var puller_hold = 0;
 
 //Camera constants
 
 var camX = 0;
 var camY = 21.1;
-var camZ = -8.4;
+var camZ = -10.4;
 var camAlpha = -61.1;
 var camBeta = 180;
 /*
@@ -84,6 +87,7 @@ const FLIPPER_RIGHT = "ArrowRight";
 const FLIPPER_LEFT = "ArrowLeft";
 const FLIPPER_DOWN = "ArrowDown";
 const FLIPPER_UP = "ArrowUp";
+const PULLER_PUSH = " ";
 
 //Key handlers
 function keyDownHandler(event){
@@ -101,10 +105,12 @@ function keyDownHandler(event){
         case(CAM_ROT_Z_UP): camBeta_spd = ANGLE_BASE_SPEED;break;
         case(CAM_ROT_Z_DOWN): camBeta_spd = -ANGLE_BASE_SPEED;break;
 
-        case(FLIPPER_RIGHT): ballx_spd = -0.01; break;
-        case(FLIPPER_LEFT): ballx_spd = 0.01; break;
-        case(FLIPPER_UP): ballz_spd = 0.01; break;
-        case(FLIPPER_DOWN): ballz_spd = -0.01; break;
+        case(FLIPPER_RIGHT): ballx_spd = -0.1; break;
+        case(FLIPPER_LEFT): ballx_spd = 0.1; break;
+        case(FLIPPER_UP): ballz_spd = 0.1; break;
+        case(FLIPPER_DOWN): ballz_spd = -0.1; break;
+
+        case(PULLER_PUSH): puller_hold = true; break;
 
         case(light1):{
             flipperLeft.isMovingUp = true;
@@ -137,6 +143,8 @@ function keyUpHandler(event){
         case(CAM_ROT_X_COUNTERCLOCKWISE): camAlpha_spd = 0;break;
         case(CAM_ROT_Z_UP): camBeta_spd = 0;break;
         case(CAM_ROT_Z_DOWN): camBeta_spd = -0;break;
+
+        case(PULLER_PUSH): puller_hold = false; break;
 
         case(FLIPPER_RIGHT): ballx_spd = 0; break;
         case(FLIPPER_LEFT): ballx_spd = 0; break;
@@ -390,6 +398,7 @@ let iter2 = 0;
 let angleSpd = 2;
 
 ball = new Ball();
+puller = new Puller()
 flipperLeft = new Flipper(0.6906, 8.4032, -5.6357+0.49,29.8,-3.24+15,-5.64,'left');
 flipperRight = new Flipper(-1.307, 8.4032, -5.6357+0.49, 150.0,-3.24+15,-5.64, 'right');
 let wallB1 = new Wall(-4.8728, 3.8272,  2.14947, 'wallB1');
@@ -397,14 +406,13 @@ let wallB2 = new Wall(2.14947, -2.55053, 3.8272, 'wallB2');
 let wallB3 = new Wall(-4.8728, 3.8272,  -2.55053, 'wallB3');
 let wallS1 = new Wall(2.14947, 0.89947, -4.8728, 'wallS1');
 let wallS2 = new Wall(-1.60053, -2.55053, -4.8728, 'wallS2');
+let wallGO = new Wall(0.89947, -1.60053, -6.1728, 'wallGO');
 let B1 = new Bumper(0.7, 0.605, 0.3125, 'B1');
 let B2 = new Bumper(-0.2, 1.4272, 0.3125, 'B2');
 let B3 = new Bumper(-1.1, 0.605, 0.3125, 'B3');
-walls = [wallB1, wallB2, wallB3, wallS1, wallS2];
-
-//ball.applyForce(0.5,0.5);  
+walls = [wallB1, wallB2, wallB3, wallS1, wallS2, wallGO];
 bumpers = [B1, B2, B3];
-ball.applyForce(1,1); 
+//ball.applyForce(0.3,0.6); 
 let time = Date.now();
 let dt = 1000/30;
 function drawScene(){
@@ -439,8 +447,13 @@ function drawScene(){
         //ball.zSpeed = ballz_spd;
         //console.log(ball.xSpeed + ", " + ball.zSpeed);-----REMOVE WHEN FINISHED
         
-        ball.collides(walls, bumpers);
-        ball.update();
+        
+        puller.update(puller_hold, ball);
+        if(ballPushed){
+            ball.collides(walls, bumpers, puller);
+            ball.update();
+        }
+        
         flipperRight.update();
         flipperLeft.update();
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
@@ -449,6 +462,7 @@ function drawScene(){
         let viewMatrix = utils.MakeView(camX, camY, camZ, camAlpha, camBeta);
 
         worldMatrices["ball"] = ball.getWorldMatrix();
+        worldMatrices["puller"] = puller.getWorldMatrix();
         worldMatrices["rightFlipper"] = flipperLeft.getWorldMatrix();
         worldMatrices["leftFlipper"] = flipperRight.getWorldMatrix();
 
