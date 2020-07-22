@@ -319,7 +319,7 @@ async function main(){
     texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     var image = new Image();
-    image.src = "StarWarsPinball1.png";
+    image.src = "StarWarsPinball2.png";
     image.onload = function () {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -402,7 +402,7 @@ puller = new Puller()
 flipperLeft = new Flipper(0.6906, 8.4032, -5.6357, 29.8, -3.24+15, -5.64, 'left');
 flipperRight = new Flipper(-1.307, 8.4032, -5.6357, 150.0, -3.24+15, -5.64, 'right');
 let wallB1 = new Wall(-4.8728, 3.8272,  2.14947, 'wallB1');
-let wallB2 = new Wall(2.14947, -2.55053, 3.8272, 'wallB2');
+let wallB2 = new Wall(2.14947, -2.55053, 2.9, 'wallB2');
 let wallB3 = new Wall(-4.8728, 3.8272,  -2.55053, 'wallB3');
 let wallS1 = new Wall(2.14947, 0.89947, -4.8728, 'wallS1');
 let wallS2 = new Wall(-1.60053, -2.65053, -4.8728, 'wallS2');
