@@ -5,7 +5,7 @@ const fps = 60;
 const flipperMoveSpeed = 15;
 const BOUNCE = 0.65;
 const CENTER_X = -0.2;
-const BUMPER_BOUNCE = 1.25;
+const BUMPER_BOUNCE = 1.10;
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -35,7 +35,9 @@ class Ball {
     updateMove(){
         this.z += this.zSpeed; 
         this.x += this.xSpeed;
-        console.log(this.x + ", " + this.z);
+        if(this.zSpeed != 0 || this.xSpeed != 0){
+            console.log(this.x + ", " + this.z);
+        }
 
         this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, 0.0, 0.0, 1.0);
     }
@@ -66,10 +68,13 @@ class Ball {
         if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG}
 
         //maximum speed
-        var maxSpeed = 3;
+        var maxSpeed = 0.5;
         if(this.xSpeed > maxSpeed) this.xSpeed = maxSpeed;
+        if(this.xSpeed < -maxSpeed) this.xSpeed = -maxSpeed;
         if(this.zSpeed > maxSpeed) this.zSpeed = maxSpeed;
+        if(this.zSpeed < -maxSpeed) this.zSpeed = -maxSpeed;
 
+        //console.log(this.xSpeed + ", " + this.zSpeed);
         this.z += this.zSpeed; 
         this.x += this.xSpeed;
         
@@ -177,9 +182,11 @@ class Puller{
         this.y = 8.3925;
         this.z = -7;
     }
+
     getWorldMatrix(){
         return this.worldMatrix;
     }
+
     update(puller_hold, ball){
         if(puller_hold == true && ballPushed == false){
             if(this.count < 20){
@@ -194,10 +201,9 @@ class Puller{
             }        
 
             //Launch
-            var xStart = 0.05;
+            var xStart = Math.random()/10;
             //var zStart = this.count/25;
-            var zStart = this.count/20;
-            console.log(xStart + ", " + zStart);
+            var zStart = this.count/40;
             ball.applyForce(xStart, zStart);
             ballPushed = true;
         }
@@ -211,10 +217,14 @@ class Flipper{
     moveSpeed = 0.5;
     maxAngle = 60;
 
-    hitbox = [];
-
     constructor(x, y, z, a1, a2, a3, side){
         this.side = side;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.hitbox = this.getHitbox();
+        this.axis = this.getAxis();
+        this.area = this.calculateArea();
         this.angle = 0;
         this.angleSpeed = 0;
         this.worldMatrix = utils.MakeWorld(x, y, z, a1, a2, a3, 1.0);
@@ -224,8 +234,85 @@ class Flipper{
         this.isOnInitPos = true;
     }
 
+    dist(a, b){
+        return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
+    }
+
+    calculateArea(){
+        var area1 = this.calcTriangle(this.hitbox[0], this.hitbox[1], this.hitbox[3]);
+        var area2 = this.calcTriangle(this.hitbox[1], this.hitbox[2], this.hitbox[3]);
+        return area1 + area2;
+    }
+
+    getHitbox(){
+        if(this.side == 'right'){
+            return [
+                [-0.4, -5.4-0.49],
+                [-1.6, -4.5-0.49],//4.5
+                [-1.6, -5.3-0.49],
+                [-0.5, -5.8-0.49]
+            ];
+        } else {
+            return [
+                [0.9, -4.8-0.49],
+                [-0.3, -5.4-0.49],//-5.4
+                [-0.1, -5.8-0.49],
+                [0.9, -5.2-0.49]
+            ];
+        }
+    }
+
+    getAxis(){
+        if(this.side == 'right'){
+            return [-1.3, -5.1];
+        } else {
+            return [0.7, -5.1];
+        }
+        
+    }
+
+    collision(ball){
+        var point = [ball.x, ball.z];
+        var threshold = 0.0005;
+        var area1 = this.calcTriangle(point, this.hitbox[0], this.hitbox[1]);
+        var area2 = this.calcTriangle(point, this.hitbox[1], this.hitbox[2]);
+        var area3 = this.calcTriangle(point, this.hitbox[2], this.hitbox[3]);
+        var area4 = this.calcTriangle(point, this.hitbox[3], this.hitbox[0]);
+        var complete = area1 + area2 + area3 + area4;
+        //console.log(complete + ", " + this.area + ", " + this.side);
+        if(complete <= this.area + threshold){
+            if(this.isMovingUp){
+                ball.xSpeed *= -BUMPER_BOUNCE * 1.5;
+                ball.zSpeed *= -BUMPER_BOUNCE * 1.5;
+            } else {
+                ball.xSpeed *= -1;
+                ball.zSpeed *= -1;
+            }
+            var ball_angle = Math.atan2(ball.y, ball.x);
+            console.log(ball_angle);
+            ball.x += 0.01;
+            ball.z += 0.01;
+            console.log("collide" + this.side);
+        }
+    }
+
+    calcTriangle(p1, p2, m){
+        var a = this.dist(m, p1);
+        var b = this.dist(m, p2);
+        var c = this.dist(p1, p2);
+        var s = (a+b+c)/2;
+        return Math.sqrt(s*(s-a)*(s-b)*(s-c));
+    }
+
     getWorldMatrix(){
         return this.worldMatrix;
+    }
+
+    rotoTranslate(p, rotation, translation, minus_translation){
+        var temp = utils.multiplyMatrices(translation, rotation);
+        temp = utils.multiplyMatrices(temp, minus_translation);
+        temp = utils.multiplyMatrixVector(temp, p);
+        return temp;
     }
 
     update(){
@@ -269,8 +356,24 @@ class Flipper{
         }
         if(this.angleSpeed != 0){
             var rotate = utils.MakeRotateYMatrix(this.angleSpeed);
+            var translate = utils.MakeTranslateMatrix(this.axis[0], this.y, this.axis[1]);
+            var minus_translate = utils.MakeTranslateMatrix(-this.axis[0], -this.y, -this.axis[1]);
+            var p0 = [this.hitbox[0][0], this.y, this.hitbox[0][1], 1];
+            var p1 = [this.hitbox[1][0], this.y, this.hitbox[1][1], 1];
+            var p2 = [this.hitbox[2][0], this.y, this.hitbox[2][1], 1];
+            var p3 = [this.hitbox[3][0], this.y, this.hitbox[3][1], 1];
+
+            var h0 = this.rotoTranslate(p0, rotate, translate, minus_translate);
+            var h1 = this.rotoTranslate(p1, rotate, translate, minus_translate);
+            var h2 = this.rotoTranslate(p2, rotate, translate, minus_translate);
+            var h3 = this.rotoTranslate(p3, rotate, translate, minus_translate);
+
+            this.hitbox[0] = [h0[0], h0[2]];
+            this.hitbox[1] = [h1[0], h1[2]];
+            this.hitbox[2] = [h2[0], h2[2]];
+            this.hitbox[3] = [h3[0], h3[2]];
+            
             this.worldMatrix = utils.multiplyMatrices(this.worldMatrix, rotate);
         }
-        
     }
 }
