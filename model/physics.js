@@ -1,11 +1,12 @@
-const GRAVITY = -0.01;
+const GRAVITY = -0.005;
 const FRICTION = 0.00005;
-const CENTER_DRAG = 0.002;
+const CENTER_DRAG = 0.0009;
 const fps = 60;
 const flipperMoveSpeed = 15;
 const BOUNCE = 0.65;
 const CENTER_X = -0.2;
 const BUMPER_BOUNCE = 1.10;
+const MAX_SPEED = 0.4;
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -67,12 +68,18 @@ class Ball {
         if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG}
         if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG}
 
+        if(this.z < -4.4728){
+            if((this.xSpeed < 0.00005 && this.xSpeed > 0) || (this.xSpeed > -0.00005 && this.xSpeed < 0)){
+                if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG*5}
+                if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG*5}
+            } 
+        }
+
         //maximum speed
-        var maxSpeed = 0.5;
-        if(this.xSpeed > maxSpeed) this.xSpeed = maxSpeed;
-        if(this.xSpeed < -maxSpeed) this.xSpeed = -maxSpeed;
-        if(this.zSpeed > maxSpeed) this.zSpeed = maxSpeed;
-        if(this.zSpeed < -maxSpeed) this.zSpeed = -maxSpeed;
+        if(this.xSpeed > MAX_SPEED) this.xSpeed = MAX_SPEED;
+        if(this.xSpeed < -MAX_SPEED) this.xSpeed = -MAX_SPEED;
+        if(this.zSpeed > MAX_SPEED) this.zSpeed = MAX_SPEED;
+        if(this.zSpeed < -MAX_SPEED) this.zSpeed = -MAX_SPEED;
 
         //console.log(this.xSpeed + ", " + this.zSpeed);
         this.z += this.zSpeed; 
@@ -285,8 +292,8 @@ class Flipper{
                 ball.xSpeed *= -BUMPER_BOUNCE * 1.5;
                 ball.zSpeed *= -BUMPER_BOUNCE * 1.5;
             } else {
-                ball.xSpeed *= -1;
-                ball.zSpeed *= -1;
+                ball.xSpeed *= -BOUNCE;
+                ball.zSpeed *= -BOUNCE;
             }
             var ball_angle = Math.atan2(ball.y, ball.x);
             console.log(ball_angle);
