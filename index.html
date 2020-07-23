@@ -11,7 +11,10 @@
 	</head>
 	
 	<body style="background-color: grey; overflow: hidden;" onLoad="main();">
-		<canvas id="my-canvas" width='1500' height='900' style="background-image: url('original.jpg')">
+		<canvas id="my-canvas" width='1500' height='900' style="background-image: url('original.jpg'); position: absolute; left: 0; top: 0;">
+			Your browser doesn't support the Canvas Element!
+		</canvas>
+		<canvas id="overlay" width='1500' height='900' style="background: transparent; position: absolute; left: 0; top: 0;">
 			Your browser doesn't support the Canvas Element!
 		</canvas>
 	</body>

@@ -79,7 +79,7 @@ const light8 = "8";
 const light9 = "9";
 const light0 = "0";
 
-const XYZ_BASE_SPEED = 1;
+const XYZ_BASE_SPEED = 0.5;
 const ANGLE_BASE_SPEED = 1;
 
 //Game control keys
@@ -105,10 +105,10 @@ function keyDownHandler(event){
         case(CAM_ROT_Z_UP): camBeta_spd = ANGLE_BASE_SPEED;break;
         case(CAM_ROT_Z_DOWN): camBeta_spd = -ANGLE_BASE_SPEED;break;
 
-        case(FLIPPER_RIGHT): ballx_spd = -0.1; break;
-        case(FLIPPER_LEFT): ballx_spd = 0.1; break;
-        case(FLIPPER_UP): ballz_spd = 0.1; break;
-        case(FLIPPER_DOWN): ballz_spd = -0.1; break;
+        case(FLIPPER_RIGHT): ballx_spd = -0.05; break;
+        case(FLIPPER_LEFT): ballx_spd = 0.05; break;
+        case(FLIPPER_UP): ballz_spd = 0.05; break;
+        case(FLIPPER_DOWN): ballz_spd = -0.05; break;
 
         case(PULLER_PUSH): puller_hold = true; break;
 
@@ -515,3 +515,5 @@ function drawScene(){
         window.requestAnimationFrame(drawScene);
     }
 }
+
+    
