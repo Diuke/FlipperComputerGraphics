@@ -19,7 +19,7 @@ var flipperRight;
 var objectKeys = [
     "body", "ball", 
     "leftFlipper", "rightFlipper" , 
-    "bumper1" , "bumper2" , "bumper3" , "puller" , 
+    "bumper1" , "bumper2" , "bumper3" , "bumper4", "puller" , 
     "dr1" , "dr2" , "dr3" , "dr4" , "dr5" , "dr6",
     "dl1" , "dl2" , "dl3" , "dl4" , "dl5" , "dl6"
 ]
@@ -279,6 +279,7 @@ void main() {
 }`
 
 async function main(){
+    displayControls();
     var canvas = document.getElementById("my-canvas");
 
     try{
@@ -385,6 +386,8 @@ async function main(){
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(mesh.indices), gl.STATIC_DRAW);  
     }
+    
+    
 
     drawScene();
 
@@ -411,8 +414,9 @@ var bumper_radius = 0.4;
 let B1 = new Bumper(0.7, 0.605, bumper_radius, 'B1');
 let B2 = new Bumper(-0.2, 1.4272, bumper_radius, 'B2');
 let B3 = new Bumper(-1.1, 0.605, bumper_radius, 'B3');
+let B4 = new Bumper(-0.2, -1, 1.5*bumper_radius, 'B4');
 walls = [wallB1, wallB2, wallB3, wallS1, wallS2, wallGO];
-bumpers = [B1, B2, B3];
+bumpers = [B1, B2, B3, B4];
 //ball.applyForce(0.3,0.6); 
 let time = Date.now();
 let dt = 1000/50; //50 FPS

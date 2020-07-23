@@ -2,18 +2,33 @@
 <html>
 	<head>
 		<title>HTML 5 Canvas Element</title>
-        <script src="lib/webgl-obj-loader.min.js"></script>
-		<script src="lib/utils.js"></script>
-		<script src="model/physics.js"></script>
-		<script src="lib/meshes.js"></script>
-		<script src="lib/objPositions.js"></script>
-		<script src="draw.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css">
+
 	</head>
 	
 	<body style="background-color: grey; overflow: hidden;" onLoad="main();">
-		<canvas id="my-canvas" width='1500' height='900' style="background-image: url('original.jpg')">
+		<canvas id="my-canvas" width='1500' height='900' style="background-image: url('cosmos.jpg'); background-size: cover;">
 			Your browser doesn't support the Canvas Element!
 		</canvas>
+		<div
+			style="font-family: star-wars; position: absolute; z-index: 1; left: 40px; top: 40px; background-color: black; border-width: 6px; border-style: double; border-color:silver; padding: 5px 10px 5px 10px; overflow:auto">
+			<p style="font-size: 45px; font-family: star-wars; color: rgb(56, 58, 196); text-align: center; margin-bottom: 1px; margin-top: 1px;">flipper</p>
+
+			<h3 style="color: white; font-size: 20px; margin-bottom: 1px; margin-top: 1px;">game controls</h3>
+			<ul id="gameControls" style="color: white; list-style-type: none;">
+			</ul>
+			<br>
+			<h3 style="color: white; font-size: 20px; margin-bottom: 1px; margin-top: 1px;">camera controls</h3>
+			<ul id="cameraControls" style="color: white; list-style-type: none;">
+			</ul>
+		</div>
+		<script src="lib/webgl-obj-loader.min.js"></script>
+		<script src="lib/utils.js"></script>
+		<script src="model/board.js"></script>
+		<script src="model/physics.js"></script>		
+		<script src="lib/meshes.js"></script>
+		<script src="lib/objPositions.js"></script>
+		<script src="draw.js"></script>
 	</body>
 
 </html>
