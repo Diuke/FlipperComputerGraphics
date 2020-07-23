@@ -470,6 +470,7 @@ function drawScene(){
         }
         
         
+        
         flipperRight.update();
         flipperLeft.update();
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
