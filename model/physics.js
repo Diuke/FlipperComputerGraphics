@@ -262,7 +262,7 @@ class Flipper{
         } else {
             return [
                 [0.91, -5.19],
-                [-0.3, -5.89],//-5.4
+                [-0.3, -5.89],
                 [-0.1, -6.29],
                 [0.9, -5.69]
             ];
@@ -278,6 +278,38 @@ class Flipper{
         
     }
 
+    pointOnLine(A, B, p){
+        var a_to_p = [p[0] - A[0], p[1] - A[1]];
+        var a_to_b = [B[0] - A[0], B[1] - A[1]];
+        var atb2 = Math.pow(a_to_b[0], 2) + Math.pow(a_to_b[1], 2);
+        var dot = a_to_p[0]*a_to_b[0] + a_to_p[1]*a_to_b[1];
+        var t = dot / atb2;
+        return [A[0] + a_to_b[0]*t , A[1] + a_to_b[1]*t];
+    }
+
+    closestPointToHitbox(hitbox, ball){
+        console.log("hitbox");
+        console.log(hitbox[0], hitbox[1], hitbox[2], hitbox[3]);
+        var hitbox_u = this.pointOnLine(hitbox[0], hitbox[1], ball);
+        var hitbox_r = this.pointOnLine(hitbox[1], hitbox[2], ball);
+        var hitbox_d = this.pointOnLine(hitbox[2], hitbox[3], ball);
+        var hitbox_l = this.pointOnLine(hitbox[3], hitbox[0], ball);
+        console.log("Hitbox intersections");
+        console.log(hitbox_u, hitbox_r, hitbox_d, hitbox_l);
+
+        var dist_u = this.dist(ball, hitbox_u);
+        var dist_r = this.dist(ball, hitbox_r);
+        var dist_d = this.dist(ball, hitbox_d);
+        var dist_l = this.dist(ball, hitbox_l);
+
+        if(dist_u <= dist_r && dist_u <= dist_d && dist_u <= dist_l) return hitbox_u;
+        if(dist_r <= dist_u && dist_r <= dist_d && dist_r <= dist_l) return hitbox_r;
+        if(dist_d <= dist_u && dist_d <= dist_r && dist_d <= dist_l) return hitbox_d;
+        if(dist_l <= dist_u && dist_l <= dist_r && dist_l <= dist_d) return hitbox_l;
+        
+        
+    }
+
     collision(ball){
         var point = [ball.x, ball.z];
         var threshold = 0.0005;
@@ -288,17 +320,22 @@ class Flipper{
         var complete = area1 + area2 + area3 + area4;
         //console.log(complete + ", " + this.area + ", " + this.side);
         if(complete <= this.area + threshold){
-            if(this.isMovingUp || !this.isOnFinalPos){
-                ball.xSpeed *= -BUMPER_BOUNCE * 1.5;
-                ball.zSpeed *= -BUMPER_BOUNCE * 1.5;
+            if(this.isMovingUp && !this.isOnFinalPos){
+                ball.applyForce(-ball.xSpeed + 0.4, -ball.zSpeed + 0.4)
+                //ball.xSpeed *= -BUMPER_BOUNCE * 1.5;
+                //ball.zSpeed *= -BUMPER_BOUNCE * 1.5;
             } else {
-                ball.xSpeed *= -BOUNCE * 0.1;
-                ball.zSpeed *= -BOUNCE * 0.1;
+                ball.xSpeed *= -BOUNCE;
+                ball.zSpeed *= -BOUNCE;
             }
-            var ball_angle = Math.atan2(ball.y, ball.x);
-            console.log(ball_angle);
-            ball.x += 0.01;
-            ball.z += 0.01;
+            var ball_p = [ball.x, ball.z]
+            var collisionPoint = this.closestPointToHitbox(this.hitbox, ball_p);
+            console.log("collision point");
+            console.log(collisionPoint);
+            console.log("ball");
+            console.log(ball_p);
+            ball.x = collisionPoint[0] + 0.0001;
+            ball.z = collisionPoint[1] + 0.0001;
             console.log("collide" + this.side);
         }
     }

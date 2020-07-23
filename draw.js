@@ -455,6 +455,7 @@ function drawScene(){
         flipperRight.collision(ball);
         */
         
+        
         //console.log(ball.xSpeed + ", " + ball.zSpeed);-----REMOVE WHEN FINISHED
         
         
@@ -468,6 +469,7 @@ function drawScene(){
                 ball.update();
             }
         }
+        
         
         
         flipperRight.update();
