@@ -1,12 +1,14 @@
-const GRAVITY = -0.005;
+const GRAVITY = -0.01;
 const FRICTION = 0.00005;
-const CENTER_DRAG = 0.0005;
+const CENTER_DRAG = 0.002;
 const fps = 60;
 const flipperMoveSpeed = 15;
 const BOUNCE = 0.65;
 const CENTER_X = -0.2;
 const BUMPER_BOUNCE = 1.10;
 const MAX_SPEED = 0.4;
+var score;
+var oldScore;
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -68,18 +70,12 @@ class Ball {
         if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG}
         if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG}
 
-        if(this.z < -4.4728){
-            if((this.xSpeed < 0.00005 && this.xSpeed > 0) || (this.xSpeed > -0.00005 && this.xSpeed < 0)){
-                if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG*2}
-                if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG*2}
-            } 
-        }
-
         //maximum speed
-        if(this.xSpeed > MAX_SPEED) this.xSpeed = MAX_SPEED;
-        if(this.xSpeed < -MAX_SPEED) this.xSpeed = -MAX_SPEED;
-        if(this.zSpeed > MAX_SPEED) this.zSpeed = MAX_SPEED;
-        if(this.zSpeed < -MAX_SPEED) this.zSpeed = -MAX_SPEED;
+        var maxSpeed = 0.5;
+        if(this.xSpeed > maxSpeed) this.xSpeed = maxSpeed;
+        if(this.xSpeed < -maxSpeed) this.xSpeed = -maxSpeed;
+        if(this.zSpeed > maxSpeed) this.zSpeed = maxSpeed;
+        if(this.zSpeed < -maxSpeed) this.zSpeed = -maxSpeed;
 
         //console.log(this.xSpeed + ", " + this.zSpeed);
         this.z += this.zSpeed; 
@@ -129,6 +125,7 @@ class Ball {
             if(walls[i].type == 'wallGO' && this.z <= walls[i].line){
                 if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
                     console.log('game over');
+                    oldScore = score;
                     puller.initialPos();
                     puller.count = 0;
                     this.restore();
@@ -183,6 +180,7 @@ class Puller{
         this.initialPos();
         this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, -90.0, 0.0, 1.0);
         this.count = 0;
+        score = 0;
     }
     initialPos(){
         this.x = -2.5264;
@@ -254,17 +252,17 @@ class Flipper{
     getHitbox(){
         if(this.side == 'right'){
             return [
-                [-0.35, -5.95],
-                [-1.35, -5.25],
-                [-1.6, -5.79],
-                [-0.5, -6.29]
+                [-0.4, -5.4-0.49],
+                [-1.6, -4.5-0.49],//4.5
+                [-1.6, -5.3-0.49],
+                [-0.5, -5.8-0.49]
             ];
         } else {
             return [
-                [0.91, -5.19],
-                [-0.3, -5.89],//-5.4
-                [-0.1, -6.29],
-                [0.9, -5.69]
+                [0.9, -4.8-0.49],
+                [-0.3, -5.4-0.49],//-5.4
+                [-0.1, -5.8-0.49],
+                [0.9, -5.2-0.49]
             ];
         }
     }
@@ -273,7 +271,7 @@ class Flipper{
         if(this.side == 'right'){
             return [-1.3, -5.1];
         } else {
-            return [0.7, -5.6];
+            return [0.7, -5.1];
         }
         
     }
@@ -288,12 +286,12 @@ class Flipper{
         var complete = area1 + area2 + area3 + area4;
         //console.log(complete + ", " + this.area + ", " + this.side);
         if(complete <= this.area + threshold){
-            if(this.isMovingUp || !this.isOnFinalPos){
+            if(this.isMovingUp){
                 ball.xSpeed *= -BUMPER_BOUNCE * 1.5;
                 ball.zSpeed *= -BUMPER_BOUNCE * 1.5;
             } else {
-                ball.xSpeed *= -BOUNCE * 0.1;
-                ball.zSpeed *= -BOUNCE * 0.1;
+                ball.xSpeed *= -1;
+                ball.zSpeed *= -1;
             }
             var ball_angle = Math.atan2(ball.y, ball.x);
             console.log(ball_angle);
@@ -365,7 +363,6 @@ class Flipper{
             var rotate = utils.MakeRotateYMatrix(this.angleSpeed);
             var translate = utils.MakeTranslateMatrix(this.axis[0], this.y, this.axis[1]);
             var minus_translate = utils.MakeTranslateMatrix(-this.axis[0], -this.y, -this.axis[1]);
-
             var p0 = [this.hitbox[0][0], this.y, this.hitbox[0][1], 1];
             var p1 = [this.hitbox[1][0], this.y, this.hitbox[1][1], 1];
             var p2 = [this.hitbox[2][0], this.y, this.hitbox[2][1], 1];
