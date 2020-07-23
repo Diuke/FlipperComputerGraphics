@@ -1,6 +1,6 @@
 const GRAVITY = -0.005;
 const FRICTION = 0.00005;
-const CENTER_DRAG = 0.005;
+const CENTER_DRAG = 0.0005;
 const fps = 60;
 const flipperMoveSpeed = 15;
 const BOUNCE = 0.65;
