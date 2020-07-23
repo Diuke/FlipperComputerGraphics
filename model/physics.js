@@ -271,7 +271,7 @@ class Flipper{
 
     getAxis(){
         if(this.side == 'right'){
-            return [-1.3, -5.1];
+            return [-1.3, -5.6];
         } else {
             return [0.7, -5.6];
         }
