@@ -2,11 +2,11 @@ const GRAVITY = -0.005;
 const FRICTION = 0.00005;
 const CENTER_DRAG = 0.0005;
 const fps = 60;
-const flipperMoveSpeed = 15;
+const flipperMoveSpeed = 10;
 const BOUNCE = 0.65;
 const CENTER_X = -0.2;
 const BUMPER_BOUNCE = 1.10;
-const MAX_SPEED = 0.4;
+const MAX_SPEED = 0.3;
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -68,10 +68,13 @@ class Ball {
         if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG}
         if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG}
 
-        if(this.z < -4.4728){
-            if((this.xSpeed < 0.00005 && this.xSpeed > 0) || (this.xSpeed > -0.00005 && this.xSpeed < 0)){
-                if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG*2}
-                if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG*2}
+        if(this.x == 0){this.xSpeed = 0.001}
+        if(this.Z == 0){this.ZSpeed = 0.001}
+
+        if(this.z < -4.3728 && (this.x > 0.79947 || this.x < -1.40053)){
+            if((this.xSpeed < 0.005 && this.xSpeed > 0) || (this.xSpeed > -0.005 && this.xSpeed < 0)){
+                if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG*5}
+                if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG*5}
             } 
         }
 
@@ -252,28 +255,29 @@ class Flipper{
     }
 
     getHitbox(){
+        let z_fix = 0.2;
         if(this.side == 'right'){
             return [
-                [-0.35, -5.95],
-                [-1.35, -5.25],
-                [-1.6, -5.79],
-                [-0.5, -6.29]
+                [-0.35, -5.95+z_fix],
+                [-1.35, -5.25+z_fix],
+                [-1.6, -5.79+z_fix],
+                [-0.5, -6.29+z_fix]
             ];
         } else {
             return [
-                [0.91, -5.19],
-                [-0.3, -5.89],
-                [-0.1, -6.29],
-                [0.9, -5.69]
+                [0.91, -5.19+z_fix],
+                [-0.3, -5.89+z_fix],
+                [-0.1, -6.29+z_fix],
+                [0.9, -5.69+z_fix]
             ];
         }
     }
 
     getAxis(){
         if(this.side == 'right'){
-            return [-1.3, -5.6];
+            return [-1.3, -5.6+0.2];
         } else {
-            return [0.7, -5.6];
+            return [0.7, -5.6+0.2];
         }
         
     }
@@ -320,23 +324,34 @@ class Flipper{
         var complete = area1 + area2 + area3 + area4;
         //console.log(complete + ", " + this.area + ", " + this.side);
         if(complete <= this.area + threshold){
-            if(this.isMovingUp && !this.isOnFinalPos){
-                ball.applyForce(-ball.xSpeed + 0.4, -ball.zSpeed + 0.4)
-                //ball.xSpeed *= -BUMPER_BOUNCE * 1.5;
-                //ball.zSpeed *= -BUMPER_BOUNCE * 1.5;
-            } else {
-                ball.xSpeed *= -BOUNCE;
-                ball.zSpeed *= -BOUNCE;
-            }
             var ball_p = [ball.x, ball.z]
             var collisionPoint = this.closestPointToHitbox(this.hitbox, ball_p);
             console.log("collision point");
             console.log(collisionPoint);
             console.log("ball");
-            console.log(ball_p);
-            ball.x = collisionPoint[0] + 0.0001;
-            ball.z = collisionPoint[1] + 0.0001;
-            console.log("collide" + this.side);
+            ball.x = collisionPoint[0];
+            ball.z = collisionPoint[1];
+
+            let v = [ball.xSpeed, ball.zSpeed];
+            let x1 = this.hitbox[0];
+            let x2 = this.hitbox[1];
+            let d = this.dist(x2, x1);
+            let normal = [(x2[1] - x1[1]) / d, -(x2[0] - x1[0]) / d];
+
+            let dot = v[0] * normal[0] + v[1] * normal[1];
+          
+            let newSpeed = [(v[0] - (2*dot*normal[0]) ), (v[1] - (2*dot*normal[1]) )];
+
+            console.log(v, newSpeed);
+
+            if(this.isMovingUp && !this.isOnFinalPos){
+                //ball.applyForce(-ball.xSpeed + 0.4, -ball.zSpeed + 0.4)
+                ball.xSpeed = newSpeed[0] * BUMPER_BOUNCE*1.5;
+                ball.zSpeed = newSpeed[1] * BUMPER_BOUNCE*1.5;
+            } else {
+                ball.xSpeed = newSpeed[0] * BOUNCE;
+                ball.zSpeed = newSpeed[1] * BOUNCE;
+            }
         }
     }
 
