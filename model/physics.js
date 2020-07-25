@@ -1,12 +1,12 @@
-const GRAVITY = -0.005;
+const GRAVITY = -0.003;
 const FRICTION = 0.00005;
-const CENTER_DRAG = 0.0005;
+const CENTER_DRAG = 0.0004;
 const fps = 60;
-const flipperMoveSpeed = 10;
+const flipperMoveSpeed = 8;
 const BOUNCE = 0.65;
 const CENTER_X = -0.2;
 const BUMPER_BOUNCE = 1.10;
-const MAX_SPEED = 0.3;
+const MAX_SPEED = 0.2;
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -214,6 +214,7 @@ class Puller{
             var xStart = Math.random()/10;
             //var zStart = this.count/25;
             var zStart = this.count/40;
+            console.log(xStart, zStart);
             ball.applyForce(xStart, zStart);
             ballPushed = true;
         }
@@ -225,7 +226,7 @@ class Puller{
 class Flipper{
     worldMatrix = null;
     moveSpeed = 0.5;
-    maxAngle = 60;
+    maxAngle = 70;
 
     constructor(x, y, z, a1, a2, a3, side){
         this.side = side;
@@ -261,13 +262,13 @@ class Flipper{
                 [-0.35, -5.95+z_fix],
                 [-1.35, -5.25+z_fix],
                 [-1.6, -5.79+z_fix],
-                [-0.5, -6.29+z_fix]
+                [-0.7064075049514779, -6.091632952294785]
             ];
         } else {
             return [
                 [0.91, -5.19+z_fix],
                 [-0.3, -5.89+z_fix],
-                [-0.1, -6.29+z_fix],
+                [-0.006407504951477752, -6.091632952294785],
                 [0.9, -5.69+z_fix]
             ];
         }

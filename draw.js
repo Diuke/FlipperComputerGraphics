@@ -68,7 +68,7 @@ const CAM_ROT_Z_DOWN = "q";
 const CAM_ROT_X_CLOCKWISE = "r";
 const CAM_ROT_X_COUNTERCLOCKWISE = "f";
 
-const light1 = "1";
+const FLIPPER_LEFT = "1";
 const light2 = "2";
 const light3 = "3";
 const light4 = "4";
@@ -77,16 +77,16 @@ const light6 = "6";
 const light7 = "7";
 const light8 = "8";
 const light9 = "9";
-const light0 = "0";
+const FLIPPER_RIGHT = "0";
 
 const XYZ_BASE_SPEED = 0.5;
 const ANGLE_BASE_SPEED = 1;
 
 //Game control keys
-const FLIPPER_RIGHT = "ArrowRight";
-const FLIPPER_LEFT = "ArrowLeft";
-const FLIPPER_DOWN = "ArrowDown";
-const FLIPPER_UP = "ArrowUp";
+const BALL_RIGHT = "ArrowRight";
+const BALL_LEFT = "ArrowLeft";
+const BALL_DOWN = "ArrowDown";
+const BALL_UP = "ArrowUp";
 const PULLER_PUSH = " ";
 
 //Key handlers
@@ -105,19 +105,19 @@ function keyDownHandler(event){
         case(CAM_ROT_Z_UP): camBeta_spd = ANGLE_BASE_SPEED;break;
         case(CAM_ROT_Z_DOWN): camBeta_spd = -ANGLE_BASE_SPEED;break;
 
-        case(FLIPPER_RIGHT): ballx_spd = -0.05; break;
-        case(FLIPPER_LEFT): ballx_spd = 0.05; break;
-        case(FLIPPER_UP): ballz_spd = 0.05; break;
-        case(FLIPPER_DOWN): ballz_spd = -0.05; break;
+        case(BALL_RIGHT): ballx_spd = -0.27; break;
+        case(BALL_LEFT): ballx_spd = 0.27; break;
+        case(BALL_UP): ballz_spd = 0.27; break;
+        case(BALL_DOWN): ballz_spd = -0.27; break;
 
         case(PULLER_PUSH): puller_hold = true; break;
 
-        case(light1):{
+        case(FLIPPER_LEFT):{
             flipperLeft.isMovingUp = true;
             flipperLeft.isMovingDown = false;
             break;
         }
-        case(light2): {
+        case(FLIPPER_RIGHT): {
             flipperRight.isMovingUp = true;
             flipperRight.isMovingDown = false;
             break;
@@ -146,19 +146,19 @@ function keyUpHandler(event){
 
         case(PULLER_PUSH): puller_hold = false; break;
 
-        case(FLIPPER_RIGHT): ballx_spd = 0; break;
-        case(FLIPPER_LEFT): ballx_spd = 0; break;
-        case(FLIPPER_UP): ballz_spd = 0; break;
-        case(FLIPPER_DOWN): ballz_spd = 0; break;
+        case(BALL_RIGHT): ballx_spd = 0; break;
+        case(BALL_LEFT): ballx_spd = 0; break;
+        case(BALL_UP): ballz_spd = 0; break;
+        case(BALL_DOWN): ballz_spd = 0; break;
 
-        case(light1): {
-            flipperLeft.isMovingDown = true;
-            flipperLeft.isMovingUp = false;
-            break;
-        }
-        case(light2):{
+        case(FLIPPER_RIGHT): {
             flipperRight.isMovingDown = true;
             flipperRight.isMovingUp = false;
+            break;
+        }
+        case(FLIPPER_LEFT):{
+            flipperLeft.isMovingDown = true;
+            flipperLeft.isMovingUp = false;
             break;
         }
         
@@ -419,7 +419,7 @@ walls = [wallB1, wallB2, wallB3, wallS1, wallS2, wallGO];
 bumpers = [B1, B2, B3, B4];
 //ball.applyForce(0.3,0.6); 
 let time = Date.now();
-let dt = 1000/60; //50 FPS
+let dt = 1000/100; //50 FPS
 function drawScene(){
     var t = utils.degToRad(defShaderParams.LDirTheta);
     var p = utils.degToRad(defShaderParams.LDirPhi);
@@ -461,6 +461,8 @@ function drawScene(){
         
         
         puller.update(puller_hold, ball);
+        flipperRight.update();
+        flipperLeft.update();
         if(ballPushed){
             ball.update();
             ball.collides(walls, bumpers, puller);
@@ -474,8 +476,7 @@ function drawScene(){
         
         
         
-        flipperRight.update();
-        flipperLeft.update();
+        
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
 
         // compose view and light

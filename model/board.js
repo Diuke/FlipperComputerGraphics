@@ -6,7 +6,7 @@ function displayControls() {
     let gc3 = document.createElement("li");
 
     gc1.innerHTML = "left flipper: 1";
-    gc2.innerHTML = "right flipper: 2";
+    gc2.innerHTML = "right flipper: 0";
     gc3.innerHTML = "launch ball: space";
 
     gameControls.appendChild(gc1);
@@ -31,7 +31,7 @@ function displayControls() {
     cc3.innerHTML = "move left: a" ;
     cc4.innerHTML = "move right: d" ;
     cc5.innerHTML = "move up: w";
-    cc6.innerHTML = "move down s: ";
+    cc6.innerHTML = "move down: s ";
     cc7.innerHTML = "tilt up: r" ;
     cc8.innerHTML = "tilt down: f" ;
     cc9.innerHTML = "pan left: q" ;
