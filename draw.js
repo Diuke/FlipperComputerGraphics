@@ -402,13 +402,13 @@ let angleSpd = 2;
 
 ball = new Ball();
 puller = new Puller()
-flipperLeft = new Flipper(0.6906, 8.4032, -5.6357, 29.8, -3.24+15, -5.64, 'left');
-flipperRight = new Flipper(-1.307, 8.4032, -5.6357, 150.0, -3.24+15, -5.64, 'right');
+flipperLeft = new Flipper(0.6906, 8.4032, -5.6357+z_fix, 29.8, -3.24+15, -5.64, 'left');
+flipperRight = new Flipper(-1.307, 8.4032, -5.635+z_fix, 150.0, -3.24+15, -5.64, 'right');
 let wallB1 = new Wall(-4.8728, 3.8272,  2.14947, 'wallB1');
 let wallB2 = new Wall(2.14947, -2.55053, 2.9, 'wallB2');
 let wallB3 = new Wall(-4.8728, 3.8272,  -2.55053, 'wallB3');
-let wallS1 = new Wall(2.14947, 0.89947, -4.8728, 'wallS1');
-let wallS2 = new Wall(-1.60053, -2.65053, -4.8728, 'wallS2');
+let wallS1 = new Wall(2.14947, 0.79947, -4.8728, 'wallS1');
+let wallS2 = new Wall(-1.40053, -2.65053, -4.8728, 'wallS2');
 let wallGO = new Wall(0.89947, -1.60053, -7.1728, 'wallGO');
 var bumper_radius = 0.4;
 let B1 = new Bumper(0.7, 0.605, bumper_radius, 'B1');
@@ -445,6 +445,7 @@ function drawScene(){
         camZ += camZ_spd;
         camAlpha += camAlpha_spd;
         camBeta += camBeta_spd;
+        
 
         
         /*
@@ -453,8 +454,8 @@ function drawScene(){
         ball.updateMove();
         flipperLeft.collision(ball);
         flipperRight.collision(ball);
+        ball.collides(walls, bumpers, puller);
         */
-        
         
         //console.log(ball.xSpeed + ", " + ball.zSpeed);-----REMOVE WHEN FINISHED
         
@@ -469,6 +470,7 @@ function drawScene(){
                 ball.update();
             }
         }
+        
         
         
         
