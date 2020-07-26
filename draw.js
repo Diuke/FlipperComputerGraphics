@@ -276,6 +276,11 @@ async function main(){
     let welcome = document.getElementById("welcome");
     let welcome2_help = document.getElementById("welcome2_help");
     let yoda_GO = document.getElementById("yoda_GO");
+    let flipper = document.getElementById("flipper");
+    let puller_sound = document.getElementById("puller_sound");
+    let bumper = document.getElementById("bumper");
+    let wall_collision = document.getElementById("wall_collision");
+    let chewie = document.getElementById("chewie");
     displayControls();
     var canvas = document.getElementById("my-canvas");
     var lives = document.getElementById("lives-display");

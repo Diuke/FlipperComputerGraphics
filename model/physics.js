@@ -112,6 +112,7 @@ class Ball {
             // bottom bound / floor
             if (this.z <= walls[i].line && this.z >= (walls[i].line - 0.5) && (walls[i].type == 'wallS1' ||  walls[i].type == 'wallS2')) {
                 if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
+                    wall_collision.play();
                     this.z = walls[i].line;
                     this.zSpeed *= -BOUNCE;
                     //this.xSpeed *=FRICTION;
@@ -119,6 +120,7 @@ class Ball {
             }
             // top bound / ceiling
             if (walls[i].type == 'wallB2' && this.z  >= walls[i].line) {
+                wall_collision.play();
                 this.z = walls[i].line;
                 //console.log('entro'); -----REMOVE WHEN FINISHED
                 //this.zSpeed *= -BOUNCE;
@@ -128,26 +130,31 @@ class Ball {
         
             // left bound
             if (walls[i].type == 'wallB1' && this.x  >= walls[i].line) {
+                wall_collision.play();
                 this.x = walls[i].line;
                 this.xSpeed *= -BOUNCE;
             }
             // right bound
             if (walls[i].type == 'wallB3' && this.x  <= walls[i].line) {
+                wall_collision.play();
                 this.x = walls[i].line;
                 this.xSpeed *= -BOUNCE;
             }
             //bottom --- game over
             if(walls[i].type == 'wallGO' && this.z <= walls[i].line){
                 if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
+                    //Game over sound Yoda laugh
                     yoda_GO.play();
                     console.log('game over');
                     lives--;
                     var lives_disp = document.getElementById("lives-display");
+                    welcome2_help.play();
                     lives_disp.innerHTML = lives;
                     puller.initialPos();
                     puller.count = 0;
                     this.restore();
                     if(lives == 0){
+                        chewie.play();
                         var overlay = document.getElementById("overlay");
                         overlay.classList.add("show");
                         overlay.classList.remove("hide");
@@ -168,7 +175,8 @@ class Ball {
         //check for all bumpers if radius < distance btw bumper center and current position
         for(var j=0; j < bumpers.length; j++){
             if(Math.sqrt(Math.pow((bumpers[j].x - this.x),2) + Math.pow((bumpers[j].z - this.z), 2)) <= bumpers[j].r ){
-                //this.x = bumpers[j].x+bumpers[j].r;
+                //play sound
+                bumper.play();
                 console.log('BUMPER'+bumpers[j].name);
                 let nx = bumpers[j].x - this.x;
                 let nz = bumpers[j].z - this.z;
@@ -243,7 +251,7 @@ class Puller{
                 while(this.z < -7){
                     this.z += 0.05;
                 }        
-
+                puller_sound.play();
                 //Launch
                 var xStart = Math.random()/10;
                 //var zStart = this.count/25;
@@ -382,9 +390,11 @@ class Flipper{
 
             if(this.isMovingUp && !this.isOnFinalPos){
                 //ball.applyForce(-ball.xSpeed + 0.4, -ball.zSpeed + 0.4)
+                flipper.play();
                 ball.xSpeed = newSpeed[0] * BUMPER_BOUNCE*1.5;
                 ball.zSpeed = newSpeed[1] * BUMPER_BOUNCE*1.5;
             } else {
+                flipper.play();
                 ball.xSpeed = newSpeed[0] * BOUNCE;
                 ball.zSpeed = newSpeed[1] * BOUNCE;
             }
