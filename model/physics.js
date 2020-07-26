@@ -11,6 +11,7 @@ const MAX_SPEED_DOWN = 0.15;
 
 let lives = 3;
 let score = 0;
+let highScore = 0
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -106,6 +107,7 @@ class Ball {
     }
     
     collides(walls, bumpers, puller){
+        let scored = false
         for(var i=0; i < walls.length; i++) {
             // logic goes here
 
@@ -150,6 +152,8 @@ class Ball {
                     
                     console.log('game over');
                     lives--;
+                    if(score > highScore) highScore = score
+                    score = 0
                     var lives_disp = document.getElementById("lives-display");
                     lives_disp.innerHTML = lives;
                     puller.initialPos();
@@ -197,11 +201,14 @@ class Ball {
                 this.xSpeed = newSpeed[0] * BUMPER_BOUNCE;
                 this.zSpeed = newSpeed[1] * BUMPER_BOUNCE;
 
+
+                scored = true
                 score += 10;
             }
 
         }
-        
+
+        return scored
     }
 }
 
