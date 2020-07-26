@@ -15,13 +15,15 @@ var ballPushed = false;
 var ball;
 var flipperLeft;
 var flipperRight;
+var highScores = {}
+var actualScores = {}
 
 var objectKeys = [
     "body", "ball", 
     "leftFlipper", "rightFlipper" , 
     "bumper1" , "bumper2" , "bumper3" , "bumper4", "puller" , 
     "dr1" , "dr2" , "dr3" , "dr4" , "dr5" , "dr6",
-    "dl1" , "dl2" , "dl3" , "dl4" , "dl5" , "dl6"
+    "dl1" , "dl2" , "dl3" , "dl4" , "dl5" , "dl6",
 ]
 
 var ballx = -2.5;
@@ -88,6 +90,8 @@ const BALL_LEFT = "ArrowLeft";
 const BALL_DOWN = "ArrowDown";
 const BALL_UP = "ArrowUp";
 const PULLER_PUSH = " ";
+
+const digitsUV = [[0.735309, 0.956854, 0.760579, 0.918019, 0.760579, 0.956854, 0.735309, 0.918019],[0.636297, 0.996017, 0.661567, 0.957183, 0.661567, 0.996017, 0.636297, 0.957183],[0.660956, 0.996505, 0.686226, 0.957671, 0.686226, 0.996505, 0.660956, 0.957671], [0.685614, 0.996261, 0.710884, 0.957427, 0.710884, 0.996261, 0.685614, 0.957427],[0.710760, 0.996749, 0.736030, 0.957915, 0.736030, 0.996749, 0.710760, 0.957915],[0.735907, 0.996749, 0.761177, 0.957915, 0.761177, 0.996749, 0.735907, 0.957915],[0.635321, 0.956466, 0.660591, 0.917632, 0.660591, 0.956466, 0.635321, 0.917632], [0.660705, 0.956272, 0.685975, 0.917438, 0.685975, 0.956272, 0.660705, 0.917438], [0.684927, 0.956466, 0.710197, 0.917632, 0.710197, 0.956466, 0.684927, 0.917632],[0.710118, 0.956466, 0.735388, 0.917632, 0.735388, 0.956466, 0.710118, 0.917632]];
 
 //Key handlers
 function keyDownHandler(event){
@@ -359,6 +363,10 @@ async function main(){
         let vao = gl.createVertexArray();
         gl.bindVertexArray(vao);
         vaos[key] = vao;
+
+        if(key.includes('dl') || key.includes('dr')) {
+            mesh.textures = digitsUV[0];
+        }
     
         var positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -430,6 +438,11 @@ function drawScene(){
 
     let currentTime = Date.now();
     if(currentTime - time > dt){
+        let scored = false
+        let addS = isPlaying ? 10 : 0
+        let Sdigits = ((score + addS) + "").padStart(6, "0").split('').reverse()
+        let Hdigits = (highScore + "").padStart(6, "0").split('').reverse()
+
         time = currentTime;
         // clear scene
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
@@ -461,7 +474,7 @@ function drawScene(){
         flipperLeft.update();
         if(ballPushed){
             ball.update();
-            ball.collides(walls, bumpers, puller);
+            scored = ball.collides(walls, bumpers, puller);
             flipperLeft.collision(ball);
             flipperRight.collision(ball);
             if(!isPlaying){
@@ -470,9 +483,9 @@ function drawScene(){
         }
         
         
-        
-        
-        
+
+
+
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
 
         // compose view and light
@@ -485,6 +498,13 @@ function drawScene(){
 
         for(const key of objectKeys) {
             let mesh = meshes[key];
+
+            if(scored || !isPlaying) {
+                var digit = parseInt(key[2]) - 1
+                if(key.includes('dl')) mesh.textures = digitsUV[parseInt(Hdigits[digit])]
+                if(key.includes('dr')) mesh.textures = digitsUV[parseInt(Sdigits[digit])]
+            }
+
             var worldViewMatrix = utils.multiplyMatrices(viewMatrix, worldMatrices[key]);
             var projectionMatrix = utils.multiplyMatrices(perspectiveMatrix, worldViewMatrix);
 
@@ -506,9 +526,9 @@ function drawScene(){
             gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(projectionMatrix));	
             gl.uniformMatrix4fv(program.WmatrixUniform, gl.FALSE, utils.transposeMatrix(worldMatrices[key]));	
 
-            //gl.activeTexture(gl.TEXTURE0);
-            //gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.uniform1i(program.textureUniform, 0);
+                
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.textures), gl.STATIC_DRAW);
+            gl.vertexAttribPointer(program.textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
 
             
             gl.bindVertexArray(vaos[key]);
