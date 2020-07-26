@@ -500,9 +500,11 @@ function drawScene(){
             let mesh = meshes[key];
 
             if(scored || !isPlaying) {
-                var digit = parseInt(key[2]) - 1
-                if(key.includes('dl')) mesh.textures = digitsUV[parseInt(Hdigits[digit])]
-                if(key.includes('dr')) mesh.textures = digitsUV[parseInt(Sdigits[digit])]
+                if(key.includes('dl') || key.includes('dr')) {
+                    var digit = parseInt(key[2]) - 1
+                    if(key.includes('dl')) mesh.textures = digitsUV[parseInt(Hdigits[digit])]
+                    if(key.includes('dr')) mesh.textures = digitsUV[parseInt(Sdigits[digit])]
+                }
             }
 
             var worldViewMatrix = utils.multiplyMatrices(viewMatrix, worldMatrices[key]);
@@ -526,10 +528,10 @@ function drawScene(){
             gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(projectionMatrix));	
             gl.uniformMatrix4fv(program.WmatrixUniform, gl.FALSE, utils.transposeMatrix(worldMatrices[key]));	
 
-                
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.textures), gl.STATIC_DRAW);
-            gl.vertexAttribPointer(program.textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
-
+            if(key.includes('dl') || key.includes('dr')) {
+                gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(mesh.textures));
+                gl.vertexAttribPointer(program.textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
+            }
             
             gl.bindVertexArray(vaos[key]);
             gl.drawElements(gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0); 
