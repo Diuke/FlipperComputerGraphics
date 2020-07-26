@@ -277,6 +277,14 @@ void main() {
 }`
 
 async function main(){
+    let welcome = document.getElementById("welcome");
+    let welcome2_help = document.getElementById("welcome2_help");
+    let yoda_GO = document.getElementById("yoda_GO");
+    let flipper = document.getElementById("flipper");
+    let puller_sound = document.getElementById("puller_sound");
+    let bumper = document.getElementById("bumper");
+    let wall_collision = document.getElementById("wall_collision");
+    let chewie = document.getElementById("chewie");
     displayControls();
     var canvas = document.getElementById("my-canvas");
     var lives = document.getElementById("lives-display");
@@ -316,6 +324,9 @@ async function main(){
         OBJ.initMeshBuffers(gl, meshes[key]);
         console.log(meshes[key]);
     }
+
+    showPage();    
+    
 
     texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -398,6 +409,20 @@ async function main(){
 
 }
 
+function playWelcome(){
+    let welcomeCallback = welcome.play();
+    welcome.onended = function(e){
+        var loader = document.getElementById("load-init");
+        loader.style.display = 'none';
+    }
+    var button = document.getElementById("welcome-button");
+    button.attributes.disabled = true;
+    
+}
+
+function showPage() {
+    
+}
 
 
 let iter = 0;
@@ -482,9 +507,6 @@ function drawScene(){
             }
         }
         
-        
-
-
 
         //if(ball.z < 0) ball.applyForce(0, 0.001); 
 
