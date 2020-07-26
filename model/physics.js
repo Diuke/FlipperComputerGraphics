@@ -139,6 +139,7 @@ class Ball {
             //bottom --- game over
             if(walls[i].type == 'wallGO' && this.z <= walls[i].line){
                 if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
+                    yoda_GO.play();
                     console.log('game over');
                     lives--;
                     var lives_disp = document.getElementById("lives-display");
