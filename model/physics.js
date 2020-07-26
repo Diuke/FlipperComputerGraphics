@@ -1,12 +1,16 @@
 const GRAVITY = -0.003;
 const FRICTION = 0.00005;
-const CENTER_DRAG = 0.0004;
+const CENTER_DRAG = 0.0003;
 const fps = 60;
 const flipperMoveSpeed = 8;
 const BOUNCE = 0.65;
 const CENTER_X = -0.2;
-const BUMPER_BOUNCE = 1.10;
-const MAX_SPEED = 0.2;
+const BUMPER_BOUNCE = 1.50;
+const MAX_SPEED_UP = 0.2;
+const MAX_SPEED_DOWN = 0.15;
+
+let lives = 3;
+let score = 0;
 
 class Ball {
     //BALL ONLY MOVES IN:
@@ -73,16 +77,16 @@ class Ball {
 
         if(this.z < -4.3728 && (this.x > 0.79947 || this.x < -1.40053)){
             if((this.xSpeed < 0.005 && this.xSpeed > 0) || (this.xSpeed > -0.005 && this.xSpeed < 0)){
-                if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG*5}
-                if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG*5}
+                if(this.x > CENTER_X){this.xSpeed -= CENTER_DRAG*4}
+                if(this.x < CENTER_X){this.xSpeed += CENTER_DRAG*4}
             } 
         }
 
         //maximum speed
-        if(this.xSpeed > MAX_SPEED) this.xSpeed = MAX_SPEED;
-        if(this.xSpeed < -MAX_SPEED) this.xSpeed = -MAX_SPEED;
-        if(this.zSpeed > MAX_SPEED) this.zSpeed = MAX_SPEED;
-        if(this.zSpeed < -MAX_SPEED) this.zSpeed = -MAX_SPEED;
+        if(this.xSpeed > MAX_SPEED_DOWN) this.xSpeed = MAX_SPEED_DOWN;
+        if(this.xSpeed < -MAX_SPEED_DOWN) this.xSpeed = -MAX_SPEED_DOWN;
+        if(this.zSpeed > MAX_SPEED_UP) this.zSpeed = MAX_SPEED_UP;
+        if(this.zSpeed < -MAX_SPEED_DOWN) this.zSpeed = -MAX_SPEED_DOWN;
 
         //console.log(this.xSpeed + ", " + this.zSpeed);
         this.z += this.zSpeed; 
@@ -95,6 +99,10 @@ class Ball {
 
     getWorldMatrix(){
         return this.worldMatrix;
+    }
+
+    dist(a, b){
+        return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
     }
     
     collides(walls, bumpers, puller){
@@ -132,9 +140,17 @@ class Ball {
             if(walls[i].type == 'wallGO' && this.z <= walls[i].line){
                 if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
                     console.log('game over');
+                    lives--;
+                    var lives_disp = document.getElementById("lives-display");
+                    lives_disp.innerHTML = lives;
                     puller.initialPos();
                     puller.count = 0;
                     this.restore();
+                    if(lives == 0){
+                        var overlay = document.getElementById("overlay");
+                        overlay.classList.add("show");
+                        overlay.classList.remove("hide");
+                    }
                 }
             }
         
@@ -153,8 +169,24 @@ class Ball {
             if(Math.sqrt(Math.pow((bumpers[j].x - this.x),2) + Math.pow((bumpers[j].z - this.z), 2)) <= bumpers[j].r ){
                 //this.x = bumpers[j].x+bumpers[j].r;
                 console.log('BUMPER'+bumpers[j].name);
-                this.xSpeed *= -BUMPER_BOUNCE;
-                this.zSpeed *= -BUMPER_BOUNCE;
+                let nx = bumpers[j].x - this.x;
+                let nz = bumpers[j].z - this.z;
+                let r = this.dist([this.x, this.z],[nx, nz]);
+                let v = [this.xSpeed, this.zSpeed];
+                let theta = Math.atan2(nz, nx);
+                let normal = [Math.cos(theta), Math.sin(theta)];
+
+                console.log(nx, nz, r, v, theta, normal);
+
+                let dot = v[0] * normal[0] + v[1] * normal[1];
+          
+                let newSpeed = [(v[0] - (2*dot*normal[0]) ), (v[1] - (2*dot*normal[1]) )];
+                console.log(newSpeed);
+
+                this.xSpeed = newSpeed[0] * BUMPER_BOUNCE;
+                this.zSpeed = newSpeed[1] * BUMPER_BOUNCE;
+
+                score += 10;
             }
 
         }
@@ -198,28 +230,30 @@ class Puller{
     }
 
     update(puller_hold, ball){
-        if(puller_hold == true && ballPushed == false){
-            if(this.count < 20){
-                this.count += 0.5;
-                this.z -= 0.02;
+        if(lives > 0){
+            if(puller_hold == true && ballPushed == false){
+                if(this.count < 20){
+                    this.count += 0.5;
+                    this.z -= 0.02;
+                }
+                console.log(this.count);           
+                isPlaying = true;
+            }else if(puller_hold == false && this.count > 0 && isPlaying == true && ballPushed==false){
+                while(this.z < -7){
+                    this.z += 0.05;
+                }        
+
+                //Launch
+                var xStart = Math.random()/10;
+                //var zStart = this.count/25;
+                var zStart = this.count/40;
+                console.log(xStart, zStart);
+                ball.applyForce(xStart, zStart);
+                ballPushed = true;
             }
-            console.log(this.count);           
-            isPlaying = true;
-        }else if(puller_hold == false && this.count > 0 && isPlaying == true && ballPushed==false){
-            while(this.z < -7){
-                this.z += 0.05;
-            }        
+            this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, -90.0, 0.0, 1.0);
 
-            //Launch
-            var xStart = Math.random()/10;
-            //var zStart = this.count/25;
-            var zStart = this.count/40;
-            console.log(xStart, zStart);
-            ball.applyForce(xStart, zStart);
-            ballPushed = true;
         }
-        this.worldMatrix = utils.MakeWorld(this.x, this.y, this.z, 0.0, -90.0, 0.0, 1.0);
-
     }
 }
 
@@ -437,4 +471,13 @@ class Flipper{
             this.worldMatrix = utils.multiplyMatrices(this.worldMatrix, rotate);
         }
     }
+}
+
+function restart(){
+    lives = 3;
+    var overlay = document.getElementById("overlay");
+    overlay.classList.remove("show");
+    overlay.classList.add("hide");
+    var lives_disp = document.getElementById("lives-display");
+    lives_disp.innerHTML = lives;
 }

@@ -122,12 +122,6 @@ function keyDownHandler(event){
             flipperRight.isMovingDown = false;
             break;
         } 
-
-        case(light7): defShaderParams.LDirTheta += 1;break;
-        case(light8): defShaderParams.LDirTheta += -1;break;
-        case(light9): defShaderParams.LDirPhi += 1;break;
-        case(light0): defShaderParams.LDirPhi += -1;break;
-
     }
 }
 
@@ -281,6 +275,8 @@ void main() {
 async function main(){
     displayControls();
     var canvas = document.getElementById("my-canvas");
+    var lives = document.getElementById("lives-display");
+    lives.innerHTML = 3;
 
     try{
 		gl= canvas.getContext("webgl2");

@@ -1,4 +1,13 @@
 @font-face {
-    font-family: star-wars;
-    src: url(fonts/star_jedi/starjedi/Starjedi.ttf);
-  }
+  font-family: star-wars;
+  src: url(fonts/star_jedi/starjedi/Starjedi.ttf);
+}
+
+.show{
+  display: block;
+}
+
+.hide{
+  display: none;
+}
+
