@@ -143,12 +143,14 @@ class Ball {
             //bottom --- game over
             if(walls[i].type == 'wallGO' && this.z <= walls[i].line){
                 if(this.x <= walls[i].l1 && this.x >= walls[i].l2){
-                    //Game over sound Yoda laugh
-                    yoda_GO.play();
+                    if(lives > 1){
+                        //Game over sound Yoda laugh
+                        yoda_GO.play();
+                    }
+                    
                     console.log('game over');
                     lives--;
                     var lives_disp = document.getElementById("lives-display");
-                    welcome2_help.play();
                     lives_disp.innerHTML = lives;
                     puller.initialPos();
                     puller.count = 0;

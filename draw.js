@@ -402,9 +402,14 @@ async function main(){
 }
 
 function playWelcome(){
-    welcome.play();
-    var loader = document.getElementById("load-init");
-    loader.style.display = 'none';
+    let welcomeCallback = welcome.play();
+    welcome.onended = function(e){
+        var loader = document.getElementById("load-init");
+        loader.style.display = 'none';
+    }
+    var button = document.getElementById("welcome-button");
+    button.attributes.disabled = true;
+    
 }
 
 function showPage() {
