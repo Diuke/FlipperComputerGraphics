@@ -169,19 +169,17 @@ defShaderParams = {
 	ambientType: "ambient",
 	diffuseType: "lambert",
 	ambientLightColor: [1.0,1.0,1.0,1.0],
-	diffuseColor: [0.2,0.2,0.2,1],
+	diffuseColor: [0.1 ,0.1,0.1,1],
 	ambientMatColor: [0,0.1,0.1,1.0],
 	emitColor: [136,136,136,1],
 
-	lightColor: [1.0,1.0,1.0,1],
+    //lightColor: [122/255,185/255,87/255,1],
+    lightColor: [1,1,1,1],
 	LPosX: 20,
 	LPosY: 30,
-	LPosZ: 50,
+	LPosZ: 10,
 	LDirTheta: 0,
 	LDirPhi: 0,
-	LConeOut: 30,
-	LConeIn: 80,
-	LDecay: 0,
     LTarget: 61,
     DTexMix: 0.8,
 
@@ -205,7 +203,8 @@ out vec3 fs_norm;
 out vec2 fs_uv;
 
 void main() {
-	fs_pos = (wMatrix * vec4(in_pos, 1.0)).xyz;
+    //fs_pos = in_pos(wMatrix * vec4(in_pos, 1.0)).xyz;
+    fs_pos = in_pos;
 	fs_norm = in_norm;
 	fs_uv = in_uv;
 	
@@ -224,7 +223,8 @@ uniform sampler2D u_texture;
 uniform vec3 eyePos;
 
 uniform vec3 LPos;
-uniform vec3 LDir;
+//uniform vec3 LDir;
+uniform vec3 lightDir;
 uniform vec4 lightColor;
 
 uniform float DTexMix;
@@ -245,6 +245,7 @@ vec4 compDiffuse(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec4 diffColor) {
 
 
 void main() {
+    vec3 LDir = lightDir;
     vec4 texcol = texture(u_texture, fs_uv);
     vec4 diffColor = diffuseColor * (1.0-DTexMix) + texcol * DTexMix;
 	vec4 ambColor = ambientMatColor * (1.0-DTexMix) + texcol * DTexMix;
@@ -255,13 +256,13 @@ void main() {
 	vec3 normalVec = normalize(fs_norm);
 	vec3 eyedirVec = normalize(eyePos - fs_pos);
 	
-	vec3 lightDir;
+	vec3 lDir;
 	
 	vec4 lColor;
 	
     vec4 ambientColor;
     
-    lightDir = normalize(LPos - fs_pos);
+    lDir = normalize(LPos - fs_pos);
 	lColor = lightColor;
 
     ambientColor = ambientLightColor;
@@ -269,7 +270,7 @@ void main() {
     // Ambient
 	vec4 ambient = ambientColor * ambColor;
 	// Diffuse
-	vec4 diffuse = compDiffuse(lightDir, lColor, normalVec, diffColor);
+	vec4 diffuse = compDiffuse(lDir, lColor, normalVec, diffColor);
 
     vec4 out_color = clamp(ambient + diffuse, 0.0, 1.0);	
   
